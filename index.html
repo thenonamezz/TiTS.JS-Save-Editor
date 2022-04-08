@@ -1,2 +1,47 @@
-<h1>Test</h1>
-<h2>vs test</h2>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Trials in Tainted Space Save Editor</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link type="text/css" rel="stylesheet" href="styles/main.css" />
+
+    <script type="text/javascript" src="scripts/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="scripts/bootstrap.min.js"></script>
+    <script type="text/javascript" src="scripts/popper.min.js"></script>
+    <!--<script type="text/javascript" src="data/bundle.js"></script>-->
+
+    <style>
+    </style>
+
+    <script>
+        $(function () {
+            $('#btnDisclaimer').on('click', () => {
+                $('#divDisclaimer').hide(400);
+                doLoad();
+            });
+        });
+
+        function doLoad() {
+
+        }
+    </script>
+</head>
+
+<body class="bg-secondary">
+    <div id="divDisclaimer" class="container-fluid text-center p-3">
+        <h1 class="display-4 text-light">TiTS Save Editor</h1>
+        <p class="text-light">Edit saves at your own risk. If you break or corrupt your savefile don't blame the editor!</p>
+        <p class="text-light">Only JavaScript version save files are supported.</p>
+        <button id="btnDisclaimer" type="button" class="btn btn-info mt-5">Continue</button>
+    </div>
+
+    <div id="divContent" class="container-fluid">
+
+    </div>
+</body>
+
+</html>
