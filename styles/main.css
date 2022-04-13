@@ -1,4 +1,19 @@
-label {
+.form-control {
+    background-color: rgba(32, 39, 53, 0.2) !important;
+    border: 1px solid #aaa !important;
+    color: #fff;
+}
+
+    .form-control:focus {
+        color: #fff;
+        box-shadow: 0 0 0 .1rem rgba(255,255,255,.50);
+    }
+
+    .form-control:hover {
+        background-color: #333E52 !important;
+    }
+
+.label-sm {
     font-size: 0.875rem;
 }
 
@@ -12,9 +27,9 @@ label {
     position: absolute;
     left: 0;
     top: 0.3rem;
-    color: #555;
+    color: #ccc;
     padding-left: 5px;
-    user-select:none;
+    user-select: none;
 }
 
 .hidden {
@@ -28,3 +43,42 @@ label {
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
 }
+
+.nav-link {
+    color: #fff !important;
+}
+
+    .nav-link.active {
+        background-color: #8D31B0 !important;
+        border-color: #8D31B0 !important;
+        border-bottom-color: #fff !important;
+        font-weight: bold;
+    }
+
+        .nav-link.active:hover {
+            background-color: #8D31B0 !important;
+        }
+
+    .nav-link:hover {
+        background-color: #8D31B0A6 !important;
+        border-color: #8D31B0A6 !important;
+        border-bottom-color: #fff !important;
+    }
+
+.container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.nav {
+    flex-wrap: nowrap !important;
+    overflow-y: scroll !important;
+    overflow-y: scroll;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+    .nav::-webkit-scrollbar { /* WebKit */
+        width: 0;
+        height: 0;
+    }

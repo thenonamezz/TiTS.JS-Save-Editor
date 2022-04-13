@@ -31,6 +31,10 @@
         var editFields = [];
 
         $(() => {
+            $('#divSaveFile').hide();
+            $('#inputSaveFileName').hide();
+            $('#inputLoadFile').attr('accept', fileExtension);
+
             $('#btnDisclaimer').on('click', () => {
                 $('#divDisclaimer').hide();
                 doLoad();
@@ -39,10 +43,6 @@
 
         function doLoad() {
             // #region File handling
-            $('#divSaveFile').hide();
-            $('#inputSaveFileName').hide();
-            $('#inputLoadFile').attr('accept', fileExtension);
-
             $('body').on('dragenter dragleave dragover', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -52,7 +52,7 @@
                 e.stopPropagation();
 
                 if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length == 0) {
-                    alert('Error loading file');
+                    alert('Error loading dropped file, please try again.');
                 }
                 else {
                     const file = e.dataTransfer.files[0];
@@ -77,12 +77,12 @@
                             try {
                                 json = JSON.parse(fileReader.result);
                                 if (!json['classInstance']) { //this check should be enough for now
-                                    alert('This file has an incorrect format, please check the file and try again.');
+                                    alert('This file is in an incorrect format, please check the file and try again.');
                                     return;
                                 }
                             }
                             catch (e) {
-                                alert("There was an error when attempting to parse the file\n" + e);
+                                alert("An error ocurred while attempting parse the file\n" + e);
                                 return;
                             }
 
@@ -91,10 +91,10 @@
                             const saveContainer = $('#divSaveFile');
                             const inputFileName = $('#inputSaveFileName');
                             if (!saveContainer.is(':visible')) {
-                                saveContainer.show(400);
+                                saveContainer.show();
                             }
                             if (!inputFileName.is(':visible')) {
-                                inputFileName.show(400);
+                                inputFileName.show();
                             }
                             inputFileName.val(file.name);
                             loaded_save_name = file.name;
@@ -103,24 +103,28 @@
                             const gameInstance = loaded_save.gameInstanceInfo;
                             const flags = loaded_save.flags;
 
-                            //placeholder
-                            document.getElementById('divEditor').appendChild(
+                            //--placeholder--
+                            const placeholderContainerVariableForTestingTabNavigation = $('#tabGeneral');
+
+                            placeholderContainerVariableForTestingTabNavigation.append(
                                 new TextField(gameInstance, 'name', 'Name', null, (newName) => {
                                     updateMailState(loaded_save, 'ToCache', newName + ' Steele');
                                 })
                             );
-                            document.getElementById('divEditor').appendChild(
+                            placeholderContainerVariableForTestingTabNavigation.append(
                                 new TextField(flags, 'PC_EMAIL_ADDRESS', 'Email', null, (newEmail) => {
                                     updateMailState(loaded_save, 'ToAddressCache', newEmail + '@SteeleTech.corp');
                                 })
                             );
-                            document.getElementById('divEditor').appendChild(
+                            placeholderContainerVariableForTestingTabNavigation.append(
                                 new IntegerField(loaded_save, 'days', 'Days', 'days', 0)
                             );
-                            document.getElementById('divEditor').appendChild(
+                            placeholderContainerVariableForTestingTabNavigation.append(
                                 new IntegerField(loaded_save, 'hours', 'Hours', 'hours', 0, 23)
                             );
+                            //--placeholder--
 
+                            $('#btnSaveFile').attr('disabled', false);
                             $('#divNoSave').hide();
                             alert("Save file loaded!");
                         });
@@ -177,6 +181,10 @@
             });
             // #endregion
 
+            // #region UI
+
+            // #endregion
+
             $('#divContent').show();
         }
     </script>
@@ -203,28 +211,55 @@
     </div>
 
     <div id="divContent" class="container-fluid hidden">
-        <div id="divToolbar" class="bg-info fixed-top">
-            <div class="row m-2 justify-content-between">
-                <div class="col-6 justify-content-start">
-                    <div>
-                        <input type="text" class="form-control form-control-sm" id="inputSaveFileName" />
-                    </div>
+        <div id="divToolbar" class="bg-info sticky-top d-flex">
+            <div class="p-2 flex-fill">
+                <div>
+                    <input type="text" class="form-control form-control-sm" id="inputSaveFileName" />
                 </div>
-                <div class="row col-6 justify-content-end">
-                    <div id="divLoadFile" class="col-auto">
-                        <button type="button" class="btn btn-sm btn-primary" onclick="inputLoadFile.click()">Load file</button>
-                        <input class="form-control" type="file" id="inputLoadFile" hidden="hidden">
-                    </div>
-                    <div id="divSaveFile" class="col-auto">
-                        <button id="btnSaveFile" type="button" class="btn btn-sm btn-primary">Save file</button>
-                    </div>
+            </div>
+            <div class="p-2 ms-auto">
+                <div id="divLoadFile" class="d-inline-block">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="inputLoadFile.click()">Load file</button>
+                    <input class="form-control" type="file" id="inputLoadFile" hidden="hidden">
+                </div>
+                <div id="divSaveFile" class="d-inline-block">
+                    <button id="btnSaveFile" type="button" class="btn btn-sm btn-primary" disabled>Save file</button>
                 </div>
             </div>
         </div>
 
-        <div id="divEditor" class="mt-5">
+        <div id="divEditor" class="mt-3">
             <div id="divNoSave" class="centered">
-                <h3>No save loaded, please click <span class="font-weight-bold">Load file</span> to begin.</h3>
+                <h3>No save loaded, please click <b>Load file</b> to begin.</h3>
+            </div>
+
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="navGeneral" data-bs-toggle="tab" data-bs-target="#tabGeneral" type="button" role="tab" aria-controls="tabGeneral" aria-selected="true">General</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="navHead" data-bs-toggle="tab" data-bs-target="#tabHead" type="button" role="tab" aria-controls="tabHead" aria-selected="false">Head</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="navBody" data-bs-toggle="tab" data-bs-target="#tabBody" type="button" role="tab" aria-controls="tabBody" aria-selected="false">Body</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="navCrotch" data-bs-toggle="tab" data-bs-target="#tabCrotch" type="button" role="tab" aria-controls="tabCrotch" aria-selected="false">Crotch</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="navPerks" data-bs-toggle="tab" data-bs-target="#tabPerks" type="button" role="tab" aria-controls="tabPerks" aria-selected="false">Perks</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="navFlags" data-bs-toggle="tab" data-bs-target="#tabFlags" type="button" role="tab" aria-controls="tabFlags" aria-selected="false">Flags</button>
+                </li>
+            </ul>
+            <div class="tab-content p-2">
+                <div class="tab-pane fade show active" id="tabGeneral" role="tabpanel" aria-labelledby="navGeneral"></div>
+                <div class="tab-pane fade" id="tabHead" role="tabpanel" aria-labelledby="navHead"></div>
+                <div class="tab-pane fade" id="tabBody" role="tabpanel" aria-labelledby="navBody"></div>
+                <div class="tab-pane fade" id="tabCrotch" role="tabpanel" aria-labelledby="navCrotch"></div>
+                <div class="tab-pane fade" id="tabPerks" role="tabpanel" aria-labelledby="navPerks"></div>
+                <div class="tab-pane fade" id="tabFlags" role="tabpanel" aria-labelledby="navFlags"></div>
             </div>
         </div>
     </div>

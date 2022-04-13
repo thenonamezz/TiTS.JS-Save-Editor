@@ -13,6 +13,10 @@ function bind(object, key, input, onChanged) {
         if (onChanged) {
             onChanged(e.target.value);
         }
+
+        if (!window.onbeforeunload) {
+            window.onbeforeunload = () => false;
+        }
     });
 }
 
@@ -21,6 +25,7 @@ class Field { //base
         this.content = document.createElement('div');
         this.content.className = 'd-flex align-items-center text-light p-1';
         this.label = document.createElement('label');
+        this.label.className = 'label-sm';
         this.input = document.createElement('input');
         this.input.className = 'form-control form-control-sm';
         this.content.appendChild(this.label);
