@@ -9,9 +9,18 @@
         box-shadow: 0 0 0 .1rem rgba(255,255,255,.50);
     }
 
+
     .form-control:hover {
         background-color: #333E52 !important;
     }
+
+        .form-control:hover ~ .input-group-text {
+            background-color: #333E52 !important;
+        }
+
+.form-control-suffix {
+    border-right: none !important;
+}
 
 .label-sm {
     font-size: 0.875rem;
@@ -74,11 +83,34 @@
     flex-wrap: nowrap !important;
     overflow-y: scroll !important;
     overflow-y: scroll;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
-    .nav::-webkit-scrollbar { /* WebKit */
+    .nav::-webkit-scrollbar {
         width: 0;
         height: 0;
     }
+
+hr {
+    margin-top: 0 !important;
+    opacity: 0.5 !important;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.input-group-text {
+    background-color: rgba(32, 39, 53, 0.2) !important;
+    border: 1px solid #aaa !important;
+    border-left: none !important;
+    color: #ddd !important;
+    user-select: none;
+}

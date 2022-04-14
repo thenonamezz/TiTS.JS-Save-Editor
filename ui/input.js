@@ -23,19 +23,30 @@ function bind(object, key, input, onChanged) {
 class Field { //base
     constructor() {
         this.content = document.createElement('div');
-        this.content.className = 'd-flex align-items-center text-light p-1';
+        this.content.className = 'd-flex align-items-center text-light py-2';
         this.label = document.createElement('label');
         this.label.className = 'label-sm';
+        this.inputWrapper = document.createElement('div');
+        this.inputWrapper.className = 'ms-2 input-group input-group-sm';
         this.input = document.createElement('input');
         this.input.className = 'form-control form-control-sm';
+        this.inputWrapper.appendChild(this.input);
         this.content.appendChild(this.label);
-        this.content.appendChild(this.input);
+        this.content.appendChild(this.inputWrapper);
     }
 
     resolveLabel(key, label) {
         this.input.id = 'editField-' + key;
         this.label.innerText = label;
         this.label.htmlFor = this.input.id;
+    }
+
+    resolveSuffix(text) {
+        const suffix = document.createElement('span');
+        suffix.className = 'input-group-text';
+        suffix.textContent = text;
+        this.input.className += ' form-control-suffix';
+        this.inputWrapper.appendChild(suffix);
     }
 
     enable() {
@@ -47,14 +58,13 @@ class Field { //base
     }
 }
 
-
-
 class TextField extends Field {
     constructor(obj, key, label, suffixText = null, onChanged = null) {
         super();
         this.input.type = 'text';
         this.label.innerText = label;
         this.resolveLabel(key, label);
+        suffixText && this.resolveSuffix(suffixText);
         bind(obj, key, this.input, onChanged);
 
         return this.content;
@@ -69,6 +79,7 @@ class IntegerField extends Field {
         this.input.pattern = '\d*';
         this.label.innerText = label;
         this.resolveLabel(key, label);
+        suffixText && this.resolveSuffix(suffixText);
         bind(obj, key, this.input, onChanged);
 
         this.input.addEventListener('change', () => {
@@ -84,10 +95,6 @@ class IntegerField extends Field {
             }
         });
 
-        if (suffixText) {
-            this.suffix = attachSuffix(this, suffixText);
-        }
-
         if (!isNaN(min)) {
             this.input.min = min;
             attachMinRequirement(this)
@@ -102,39 +109,39 @@ class IntegerField extends Field {
     }
 }
 
-// #region Suffix
-function getTextWidth(text, font) {
-    var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
-    var context = canvas.getContext("2d");
-    context.font = font;
-    var metrics = context.measureText(text);
-    return metrics.width;
-}
+class FloatField extends Field {
+    constructor(obj, key, label, suffixText = null, min = null, max = null, onChanged = null) {
+        super();
+        this.input.type = 'number';
+        this.label.innerText = label;
+        this.resolveLabel(key, label);
+        suffixText && this.resolveSuffix(suffixText);
+        bind(obj, key, this.input, onChanged);
 
-function updateSuffixPosition(input, suffix) {
-    let width = getTextWidth(input.value, '0.875rem Poppins');
-    suffix.style.left = (width + 10) + 'px';
-}
+        this.input.addEventListener('change', () => {
+            const value = this.input.value;
+            if (value.startsWith('.')) {
+                this.input.value = 0 + value;
+            }
 
-function attachSuffix(field, suffixText) {
-    let wrapper = document.createElement('div');
-    wrapper.className = 'suffix-wrapper';
+            if (value.startsWith('0') && value.length > 1) {
+                this.input.value = parseFloat(value);
+                updateSuffixPosition(this.input, this.suffix);
+            }
+        });
 
-    let suffix = document.createElement('span');
-    suffix.innerText = suffixText;
-    suffix.className = 'suffix';
-    suffix.style.fontSize = '0.875em';
+        if (!isNaN(min)) {
+            this.input.min = min;
+            attachMinRequirement(this)
+        }
 
-    updateSuffixPosition(field.input, suffix);
-    field.input.addEventListener('input', () => {
-        updateSuffixPosition(field.input, suffix);
-    });
+        if (!isNaN(max)) {
+            this.input.max = max;
+            attachMaxRequirement(this)
+        }
 
-    wrapper.appendChild(field.input);
-    wrapper.appendChild(suffix);
-    field.content.appendChild(wrapper);
-
-    return suffix;
+        return this.content;
+    }
 }
 // #endregion
 
