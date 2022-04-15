@@ -9,8 +9,11 @@ class Tab {
 class Row {
     constructor(groups) {
         this.root = document.createElement('div');
-        this.root.className = 'd-flex py-3 mb-2';
-        groups.forEach(g => this.root.appendChild(g));
+        this.root.className = 'row py-3 mb-2 g-0';
+        groups.forEach(g => {
+            g.className = 'col-' + 12 / groups.length + ' px-4';
+            this.root.appendChild(g)
+        });
         return this.root;
     }
 }
@@ -18,8 +21,6 @@ class Row {
 class Group {
     constructor(titleText, fields) {
         this.root = document.createElement('div');
-        this.root.className = 'flex-fill px-5';
-
         if (titleText) {
             const titleElement = document.createElement('h3');
             titleElement.textContent = titleText;
@@ -27,7 +28,6 @@ class Group {
             this.root.appendChild(titleElement);
             this.root.appendChild(hr);
         }
-
         fields.forEach(f => this.root.appendChild(f));
         return this.root;
     }

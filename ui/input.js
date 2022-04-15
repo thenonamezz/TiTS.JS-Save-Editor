@@ -1,8 +1,23 @@
 //coming from .net and not having INotifyPropertyChanged was rough, but this does the job
-function bind(object, key, input, onChanged) {
+function bind(object, key, input, type = null, onChanged = null) {
     const initValue = object[key];
     Object.defineProperty(object, key, {
-        get() { return input.value },
+        get() {
+            let value;
+
+            //the game should be able to parse strings as numbers (within reason) just fine but just in case
+            switch (type) {
+                case ValueType.Integer:
+                case ValueType.Float:
+                    value = input.valueAsNumber;
+                    break;
+                default:
+                    value = input.value;
+                    break;
+            }
+
+            return value
+        },
         set(value) { input.value = value }
     });
     object[key] = initValue;
@@ -11,7 +26,7 @@ function bind(object, key, input, onChanged) {
         object[key] = e.target.value;
 
         if (onChanged) {
-            onChanged(e.target.value);
+            onChanged(value);
         }
 
         if (!window.onbeforeunload) {
@@ -23,20 +38,27 @@ function bind(object, key, input, onChanged) {
 class Field { //base
     constructor() {
         this.content = document.createElement('div');
-        this.content.className = 'd-flex align-items-center text-light py-2';
+        //this.content.className = 'd-flex align-items-center text-light py-2';
+        this.content.className = 'text-light my-3 w-100';
+        //this.labelWrapper = document.createElement('div');
+        //this.labelWrapper.className = 'flex-grow-1';
         this.label = document.createElement('label');
         this.label.className = 'label-sm';
+        //this.labelWrapper.appendChild(this.label);
         this.inputWrapper = document.createElement('div');
-        this.inputWrapper.className = 'ms-2 input-group input-group-sm';
+        //this.inputWrapper.className = 'ms-2 input-group input-group-sm col-sm-10';
+        this.inputWrapper.className = 'input-group input-group-sm';
         this.input = document.createElement('input');
         this.input.className = 'form-control form-control-sm';
         this.inputWrapper.appendChild(this.input);
+        //this.content.appendChild(this.labelWrapper);
         this.content.appendChild(this.label);
         this.content.appendChild(this.inputWrapper);
     }
 
     resolveLabel(key, label) {
         this.input.id = 'editField-' + key;
+        this.select && (this.select.id = 'editField-' + key);
         this.label.innerText = label;
         this.label.htmlFor = this.input.id;
     }
@@ -58,6 +80,28 @@ class Field { //base
     }
 }
 
+class SelectField extends Field {
+    constructor(items, obj, key, label, onChanged = null) {
+        super();
+        this.select = document.createElement('select');
+        this.select.className = 'form-select form-select-sm';
+        this.label.innerText = label;
+        this.resolveLabel(key, label);
+        items.forEach(i => {
+            const option = document.createElement('option');
+            option.value = i.value;
+            option.text = i.name;
+            option.selected = false;
+            this.select.appendChild(option);
+        });
+        this.inputWrapper.replaceChild(this.select, this.input);
+
+        bind(obj, key, this.select, ValueType.Integer, onChanged);
+
+        return this.content;
+    }
+}
+
 class TextField extends Field {
     constructor(obj, key, label, suffixText = null, onChanged = null) {
         super();
@@ -65,7 +109,8 @@ class TextField extends Field {
         this.label.innerText = label;
         this.resolveLabel(key, label);
         suffixText && this.resolveSuffix(suffixText);
-        bind(obj, key, this.input, onChanged);
+
+        bind(obj, key, this.input, ValueType.String, onChanged);
 
         return this.content;
     }
@@ -80,7 +125,8 @@ class IntegerField extends Field {
         this.label.innerText = label;
         this.resolveLabel(key, label);
         suffixText && this.resolveSuffix(suffixText);
-        bind(obj, key, this.input, onChanged);
+
+        bind(obj, key, this.input, ValueType.Integer, onChanged);
 
         this.input.addEventListener('change', () => {
             const value = this.input.value;
@@ -116,7 +162,8 @@ class FloatField extends Field {
         this.label.innerText = label;
         this.resolveLabel(key, label);
         suffixText && this.resolveSuffix(suffixText);
-        bind(obj, key, this.input, onChanged);
+
+        bind(obj, key, this.input, ValueType.Float, onChanged);
 
         this.input.addEventListener('change', () => {
             const value = this.input.value;
@@ -180,3 +227,9 @@ function attachMaxRequirement(field) {
     });
 }
 // #endregion
+
+const ValueType = {
+    String: 0,
+    Integer: 1,
+    Float: 2
+}
