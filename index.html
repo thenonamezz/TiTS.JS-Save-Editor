@@ -10,11 +10,13 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/knockout@3.5.1/build/output/knockout-latest.min.js"></script>
+    <script type="text/javascript" src="https://kit.fontawesome.com/f5341e91eb.js"></script>
     <script type="text/javascript" src="scripts/filesaver.js"></script>
     <script type="text/javascript" src="scripts/util.js"></script>
     <script type="text/javascript" src="ui/input.js"></script>
     <script type="text/javascript" src="ui/views.js"></script>
     <script type="text/javascript" src="data/global.js"></script>
+    <script type="text/javascript" src="data/save.js"></script>
 
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
     <link type="text/css" rel="stylesheet" href="styles/bootstrap-mod.css" />
@@ -27,14 +29,15 @@
         //in case they switch to using a custom extension at some point like they do with coc2
         const fileExtension = '.json';
 
-        var loaded_save = {};
-        var loaded_save_name = '';
-        var editFields = [];
+        const save = new Save();
 
         $(() => {
             $('#divSaveFile').hide();
             $('#inputSaveFileName').hide();
             $('#inputLoadFile').attr('accept', fileExtension);
+
+            $('#toolbarWrapper').collapse();
+            $('#toolbarWrapper').show();
 
             //$('input').blur((e) => {
             //    event.target.checkValidity();
@@ -42,6 +45,8 @@
             //    //setTimeout(function () { $(event.target).focus(); }, 50);
             //    alert('a');
             //});
+
+            //document.getElementById('toolbarWrapper').toggle();
 
             $('#btnDisclaimer').on('click', () => {
                 $('#divDisclaimer').hide();
@@ -94,7 +99,9 @@
                                 return;
                             }
 
-                            loaded_save = json;
+                            save.saveFile = file;
+                            save.saveObj = json;
+                            
 
                             const saveContainer = $('#divSaveFile');
                             const inputFileName = $('#inputSaveFileName');
@@ -104,46 +111,49 @@
                             if (!inputFileName.is(':visible')) {
                                 inputFileName.show();
                             }
-                            inputFileName.val(file.name);
-                            loaded_save_name = file.name;
+
+                            inputFileName.val(save.saveFile.name);
 
 
-                            const gameInstance = loaded_save.gameInstanceInfo;
-                            const flags = loaded_save.flags;
-                            const pc = loaded_save.characters.PC;
+                            const gameInstance = save.saveObj.gameInstanceInfo;
+                            const flags = save.saveObj.flags;
+                            const pc = save.saveObj.characters.PC;
 
                             //--placeholder--
                             const tabGeneral = $('#tabGeneral');
                             tabGeneral.append(new Tab([
                                 new Row([
                                     new Group('General', [
-                                        new TextField(gameInstance, 'name', 'Name', null, (newName) => {
-                                            updateMailState(loaded_save, 'ToCache', newName + ' Steele');
-                                        }),
-                                        new TextField(flags, 'PC_EMAIL_ADDRESS', 'Email', '@SteeleTech.corp', (newEmail) => {
-                                            updateMailState(loaded_save, 'ToAddressCache', newEmail + '@SteeleTech.corp');
-                                        }),
-                                        new IntegerField(pc, 'credits', 'Credits', null, 0),
-                                        new IntegerField(loaded_save, 'days', 'Days', 'days', 0),
-                                        new IntegerField(loaded_save, 'hours', 'Hours', 'hours', 0, 23),
-                                        new IntegerField(loaded_save, 'minutes', 'Minutes', 'minutes', 0, 59)
+                                        new TextField2('ballFullness', 'Ball')
+                                        //new TextField(gameInstance, 'name', 'Name', null, (newName) => {
+                                        //    updateMailState(save.saveObj, 'ToCache', newName + ' Steele');
+                                        //}),
+                                        //new TextField(flags, 'PC_EMAIL_ADDRESS', 'Email', '@SteeleTech.corp', (newEmail) => {
+                                        //    updateMailState(save.saveObj, 'ToAddressCache', newEmail + '@SteeleTech.corp');
+                                        //}),
+                                        //new IntegerField(pc, 'credits', 'Credits', null, 0),
+                                        //new IntegerField(save.saveObj, 'days', 'Days', 'days', 0),
+                                        //new IntegerField(save.saveObj, 'hours', 'Hours', 'hours', 0, 23),
+                                        //new IntegerField(save.saveObj, 'minutes', 'Minutes', 'minutes', 0, 59)
                                     ]),
                                     new Group('Advancement', [
-                                        new IntegerField(pc, 'level', 'Level', null, 0, 10),
-                                        new SelectField(globalKeys.ValidTypes.Ear, pc, 'earType', 'Ear Type')
+                                        //new IntegerField(pc, 'level', 'Level', null, 0, 10),
+                                        //new SelectField(globalKeys.ValidTypes.Ear, pc, 'earType', 'Ear Type')
                                     ])
                                 ]),
                                 new Row([
                                     new Group('Stats (only modifiers atm)', [
-                                        new IntegerField(pc, 'physiqueMod', 'Physique Mod', null, 0),
-                                        new IntegerField(pc, 'reflexesMod', 'Reflexes Mod', null, 0),
-                                        new IntegerField(pc, 'aimMod', 'Aim Mod', null, 0),
-                                        new IntegerField(pc, 'intelligenceMod', 'Intelligence Mod', null, 0),
-                                        new IntegerField(pc, 'willpowerMod', 'Willpower Mod', null, 0),
-                                        new IntegerField(pc, 'libidoMod', 'Libido Mod', null, 0, 100),
+                                        //new IntegerField(pc, 'physiqueMod', 'Physique Mod', null, 0),
+                                        //new IntegerField(pc, 'reflexesMod', 'Reflexes Mod', null, 0),
+                                        //new IntegerField(pc, 'aimMod', 'Aim Mod', null, 0),
+                                        //new IntegerField(pc, 'intelligenceMod', 'Intelligence Mod', null, 0),
+                                        //new IntegerField(pc, 'willpowerMod', 'Willpower Mod', null, 0),
+                                        //new IntegerField(pc, 'libidoMod', 'Libido Mod', null, 0, 100)
                                     ])
                                 ])
                             ]));
+
+                            save.character = save.saveObj.characters.PC;
 
                             $('#btnSaveFile').attr('disabled', false);
                             $('#divNoSave').hide();
@@ -187,13 +197,13 @@
                     input.val(val + fileExtension);
                 }
                 else {
-                    input.val(loaded_save_name + fileExtension);
+                    input.val(save.saveFile.name + fileExtension);
                     alert('File name must be ' + requiredLength + ' character' + (requiredLength > 1 ? 's' : '') + ' or longer');
                 }
             });
 
             $('#btnSaveFile').on('click', () => {
-                const blob = new Blob([JSON.stringify(loaded_save)], { type: 'text/json' });
+                const blob = new Blob([JSON.stringify(save.saveObj)], { type: 'text/json' });
                 var fileName = $('#inputSaveFileName').val();
                 if (!fileName) {
                     fileName = "unnamed" + fileExtension;
@@ -232,28 +242,30 @@
     </div>
 
     <div id="divContent" class="container-fluid hidden">
-        <div id="divToolbar" class="bg-info sticky-top d-flex">
-            <div class="flex-fill p-2">
-                <div>
-                    <input type="text" class="form-control form-control-sm" id="inputSaveFileName" />
+        <div id="toolbarWrapper">
+            <div id="divToolbar" class="bg-info sticky-top row g-0">
+                <div class="col p-2">
+                    <div>
+                        <input type="text" class="form-control form-control-sm" id="inputSaveFileName" />
+                    </div>
                 </div>
-            </div>
-            <div class="ms-auto p-2">
-                <div id="divLoadFile" class="d-inline-block">
-                    <button type="button" class="btn btn-sm btn-primary" onclick="inputLoadFile.click()">Load file</button>
-                    <input class="form-control" type="file" id="inputLoadFile" hidden="hidden">
-                </div>
-                <div id="divSaveFile" class="d-inline-block">
-                    <button id="btnSaveFile" type="button" class="btn btn-sm btn-primary" disabled>Save file</button>
+                <div class="col-sm-auto p-2 text-center">
+                    <div id="divLoadFile" class="d-inline-block">
+                        <button type="button" class="btn btn-sm btn-primary" onclick="inputLoadFile.click()">Load file</button>
+                        <input class="form-control" type="file" id="inputLoadFile" hidden="hidden">
+                    </div>
+                    <div id="divSaveFile" class="d-inline-block">
+                        <button id="btnSaveFile" type="button" class="btn btn-sm btn-primary" disabled>Save file</button>
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="bg-info text-center mx-auto px-3 py-1 expand-icon rounded-bottom position-relative">
+            <a data-bs-toggle="collapse" href="#toolbarWrapper" role="button" aria-expanded="true" aria-controls="toolbarWrapper"
+               class="link-light underline text-decoration-none stretched-link"><i class="fa-solid fa-arrows-up-down"></i></a>
+        </div>
 
         <div id="divEditor" class="mt-3">
-            <div id="divNoSave" class="centered">
-                <h3>No save loaded, please click <b>Load file</b> to begin.</h3>
-            </div>
-
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="navGeneral" data-bs-toggle="tab" data-bs-target="#tabGeneral" type="button" role="tab" aria-controls="tabGeneral" aria-selected="true">General</button>
@@ -281,6 +293,10 @@
                 <div class="tab-pane fade" id="tabCrotch" role="tabpanel" aria-labelledby="navCrotch"></div>
                 <div class="tab-pane fade" id="tabPerks" role="tabpanel" aria-labelledby="navPerks"></div>
                 <div class="tab-pane fade" id="tabFlags" role="tabpanel" aria-labelledby="navFlags"></div>
+            </div>
+
+            <div id="divNoSave" class="d-flex justify-content-center align-items-center px-2">
+                <h4>No save loaded, please click <b>Load file</b> to begin.</h4>
             </div>
         </div>
     </div>

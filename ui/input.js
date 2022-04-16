@@ -38,20 +38,14 @@ function bind(object, key, input, type = null, onChanged = null) {
 class Field { //base
     constructor() {
         this.content = document.createElement('div');
-        //this.content.className = 'd-flex align-items-center text-light py-2';
         this.content.className = 'text-light my-3 w-100';
-        //this.labelWrapper = document.createElement('div');
-        //this.labelWrapper.className = 'flex-grow-1';
         this.label = document.createElement('label');
         this.label.className = 'label-sm';
-        //this.labelWrapper.appendChild(this.label);
         this.inputWrapper = document.createElement('div');
-        //this.inputWrapper.className = 'ms-2 input-group input-group-sm col-sm-10';
         this.inputWrapper.className = 'input-group input-group-sm';
         this.input = document.createElement('input');
         this.input.className = 'form-control form-control-sm';
         this.inputWrapper.appendChild(this.input);
-        //this.content.appendChild(this.labelWrapper);
         this.content.appendChild(this.label);
         this.content.appendChild(this.inputWrapper);
     }
@@ -79,6 +73,55 @@ class Field { //base
         this.input.disabled = true;
     }
 }
+
+
+class CharacterBinding {
+    constructor(key, input, type) {
+        this.character = save.character;
+
+        save.charChanged.on('charchanged', () => {
+            const initValue = save.character[key];
+            Object.defineProperty(save.character, key, {
+                get() {
+                    let value;
+
+                    //the game should be able to parse strings as numbers (within reason) just fine but just in case
+                    switch (type) {
+                        case ValueType.Integer:
+                        case ValueType.Float:
+                            value = input.valueAsNumber;
+                            break;
+                        default:
+                            value = input.value;
+                            break;
+                    }
+
+                    return value
+                },
+                set(value) { input.value = value }
+            });
+            save.character[key] = initValue;
+        });
+    }
+}
+
+class TextField2 extends Field {
+    constructor(key, label, suffixText = null, onChanged = null) {
+        super();
+        this.input.type = 'text';
+        this.label.innerText = label;
+        this.resolveLabel(key, label);
+        suffixText && this.resolveSuffix(suffixText);
+
+        new CharacterBinding(key, this.input, ValueType.String);
+
+        /*bind(obj, key, this.input, ValueType.String, onChanged);*/
+
+        return this.content;
+    }
+}
+
+
 
 class SelectField extends Field {
     constructor(items, obj, key, label, onChanged = null) {
