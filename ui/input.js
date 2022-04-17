@@ -1,51 +1,18 @@
-//coming from .net and not having INotifyPropertyChanged was rough, but this does the job
-function bind(object, key, input, type = null, onChanged = null) {
-    const initValue = object[key];
-    Object.defineProperty(object, key, {
-        get() {
-            let value;
-
-            //the game should be able to parse strings as numbers (within reason) just fine but just in case
-            switch (type) {
-                case ValueType.Integer:
-                case ValueType.Float:
-                    value = input.valueAsNumber;
-                    break;
-                default:
-                    value = input.value;
-                    break;
-            }
-
-            return value
-        },
-        set(value) { input.value = value }
-    });
-    object[key] = initValue;
-
-    input.addEventListener('input', (e) => {
-        object[key] = e.target.value;
-
-        if (onChanged) {
-            onChanged(value);
-        }
-
-        if (!window.onbeforeunload) {
-            window.onbeforeunload = () => false;
-        }
-    });
-}
-
-class Field { //base
+class Field {
     constructor() {
         this.content = document.createElement('div');
         this.content.className = 'text-light my-3 w-100';
+
         this.label = document.createElement('label');
         this.label.className = 'label-sm';
+
         this.inputWrapper = document.createElement('div');
         this.inputWrapper.className = 'input-group input-group-sm';
         this.input = document.createElement('input');
         this.input.className = 'form-control form-control-sm';
+        this.input.setAttribute('disabled', true);
         this.inputWrapper.appendChild(this.input);
+
         this.content.appendChild(this.label);
         this.content.appendChild(this.inputWrapper);
     }
@@ -64,112 +31,44 @@ class Field { //base
         this.input.className += ' form-control-suffix';
         this.inputWrapper.appendChild(suffix);
     }
-
-    enable() {
-        this.input.disabled = false;
-    }
-
-    disable() {
-        this.input.disabled = true;
-    }
-}
-
-
-class CharacterBinding {
-    constructor(key, input, type) {
-        this.character = save.character;
-
-        save.charChanged.on('charchanged', () => {
-            const initValue = save.character[key];
-            Object.defineProperty(save.character, key, {
-                get() {
-                    let value;
-
-                    //the game should be able to parse strings as numbers (within reason) just fine but just in case
-                    switch (type) {
-                        case ValueType.Integer:
-                        case ValueType.Float:
-                            value = input.valueAsNumber;
-                            break;
-                        default:
-                            value = input.value;
-                            break;
-                    }
-
-                    return value
-                },
-                set(value) { input.value = value }
-            });
-            save.character[key] = initValue;
-        });
-    }
-}
-
-class TextField2 extends Field {
-    constructor(key, label, suffixText = null, onChanged = null) {
-        super();
-        this.input.type = 'text';
-        this.label.innerText = label;
-        this.resolveLabel(key, label);
-        suffixText && this.resolveSuffix(suffixText);
-
-        new CharacterBinding(key, this.input, ValueType.String);
-
-        /*bind(obj, key, this.input, ValueType.String, onChanged);*/
-
-        return this.content;
-    }
-}
-
-
-
-class SelectField extends Field {
-    constructor(items, obj, key, label, onChanged = null) {
-        super();
-        this.select = document.createElement('select');
-        this.select.className = 'form-select form-select-sm';
-        this.label.innerText = label;
-        this.resolveLabel(key, label);
-        items.forEach(i => {
-            const option = document.createElement('option');
-            option.value = i.value;
-            option.text = i.name;
-            option.selected = false;
-            this.select.appendChild(option);
-        });
-        this.inputWrapper.replaceChild(this.select, this.input);
-
-        bind(obj, key, this.select, ValueType.Integer, onChanged);
-
-        return this.content;
-    }
 }
 
 class TextField extends Field {
-    constructor(obj, key, label, suffixText = null, onChanged = null) {
+    constructor(binding, label, suffixText = null, onChanged = null) {
         super();
-        this.input.type = 'text';
-        this.label.innerText = label;
-        this.resolveLabel(key, label);
-        suffixText && this.resolveSuffix(suffixText);
 
-        bind(obj, key, this.input, ValueType.String, onChanged);
+        this.input.type = 'text';
+
+        this.label.innerText = label;
+        this.resolveLabel(binding.key, label);
+
+        if (suffixText) {
+            this.resolveSuffix(suffixText);
+        }
+
+        binding.valueType = ValueType.String;
+        resolveBinding(binding, this.input, onChanged);
 
         return this.content;
     }
 }
 
 class IntegerField extends Field {
-    constructor(obj, key, label, suffixText = null, min = null, max = null, onChanged = null) {
+    constructor(binding, label, suffixText = null, min = null, max = null, onChanged = null) {
         super();
         this.input.type = 'number';
         this.input.step = 1;
         this.input.pattern = '\d*';
-        this.label.innerText = label;
-        this.resolveLabel(key, label);
-        suffixText && this.resolveSuffix(suffixText);
 
-        bind(obj, key, this.input, ValueType.Integer, onChanged);
+        this.label.innerText = label;
+        this.resolveLabel(binding.key, label);
+
+        if (suffixText) {
+            this.resolveSuffix(suffixText);
+        }
+
+        binding.valueType = ValueType.Integer;
+        resolveBinding(binding, this.input, onChanged);
 
         this.input.addEventListener('change', () => {
             const value = this.input.value;
@@ -179,8 +78,7 @@ class IntegerField extends Field {
             }
 
             if (value.startsWith('0') && value.length > 1) {
-                this.input.value = parseInt(value);
-                updateSuffixPosition(this.input, this.suffix);
+                this.input.value = +value;
             }
         });
 
@@ -199,14 +97,19 @@ class IntegerField extends Field {
 }
 
 class FloatField extends Field {
-    constructor(obj, key, label, suffixText = null, min = null, max = null, onChanged = null) {
+    constructor(binding, label, suffixText = null, min = null, max = null, onChanged = null) {
         super();
         this.input.type = 'number';
-        this.label.innerText = label;
-        this.resolveLabel(key, label);
-        suffixText && this.resolveSuffix(suffixText);
 
-        bind(obj, key, this.input, ValueType.Float, onChanged);
+        this.label.innerText = label;
+        this.resolveLabel(binding.key, label);
+
+        if (suffixText) {
+            this.resolveSuffix(suffixText);
+        }
+
+        binding.valueType = ValueType.Float;
+        resolveBinding(binding, this.input, onChanged);
 
         this.input.addEventListener('change', () => {
             const value = this.input.value;
@@ -215,8 +118,7 @@ class FloatField extends Field {
             }
 
             if (value.startsWith('0') && value.length > 1) {
-                this.input.value = parseFloat(value);
-                updateSuffixPosition(this.input, this.suffix);
+                this.input.value = +value;
             }
         });
 
@@ -233,22 +135,63 @@ class FloatField extends Field {
         return this.content;
     }
 }
-// #endregion
+
+class SelectField extends Field {
+    constructor(items, binding, label, onChanged = null) {
+        super();
+        this.label.innerText = label;
+        this.resolveLabel(binding.key, label);
+
+        this.select = document.createElement('select');
+        this.select.className = 'form-select form-select-sm';
+        items.forEach(i => {
+            const option = document.createElement('option');
+            option.value = i.value;
+            option.text = i.name;
+            option.selected = false;
+            this.select.appendChild(option);
+        });
+
+        this.select.setAttribute('disabled', true);
+        this.select.value = '-999';
+        this.inputWrapper.replaceChild(this.select, this.input);
+
+        resolveBinding(binding, this.select, onChanged);
+
+        return this.content;
+    }
+}
+
+class SwitchField extends Field {
+    constructor(binding, label, onChanged = null) {
+        super();
+        this.inputWrapper.className = 'form-check form-switch';
+
+        this.input.type = 'checkbox';
+        this.input.role = 'switch';
+        this.input.className = 'form-check-input';
+
+        this.label.innerText = label;
+        this.label.className += ' form-check-label';
+        this.resolveLabel(binding.key, label);
+
+        binding.valueType = ValueType.Boolean;
+        resolveBinding(binding, this.input, onChanged);
+
+        return this.content;
+    }
+}
 
 // #region Min Max req
 function attachMinRequirement(field) {
     field.input.addEventListener('change', (e) => {
         const min = Number(field.input.min);
-        var newValue = e.target.valueAsNumber;
+        var newValue = +e.target.value;
         if (isNaN(newValue)) { newValue = min - 1; }
         if (newValue < min) {
             alert('Value cannot be less than ' + min);
             field.input.invalid = true;
             field.input.value = min;
-
-            if (field.suffix) {
-                updateSuffixPosition(field.input, field.suffix);
-            }
         }
     });
 }
@@ -256,23 +199,13 @@ function attachMinRequirement(field) {
 function attachMaxRequirement(field) {
     field.input.addEventListener('change', (e) => {
         const max = Number(field.input.max);
-        var newValue = e.target.valueAsNumber;
+        var newValue = +e.target.value;
         if (isNaN(newValue)) { newValue = max + 1; }
         if (newValue > max) {
             alert('Value cannot be more than ' + max);
             field.input.invalid = true;
             field.input.value = max;
-
-            if (field.suffix) {
-                updateSuffixPosition(field.input, field.suffix);
-            }
         }
     });
 }
 // #endregion
-
-const ValueType = {
-    String: 0,
-    Integer: 1,
-    Float: 2
-}

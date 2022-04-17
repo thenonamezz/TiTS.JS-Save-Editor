@@ -1,30 +1,29 @@
 class Save {
     constructor() {
         this.saveFile = null;
-        this.saveObj = {};
-        this._char = null;
-        this.charChanged = new EventEmitter();
-
+        this.saveObj = null;
+        this.oldSaveObj = null;
+        this.currentCharacter = null;
+        this.previousCharacter = null;
+        this.CharacterChanged = new EventHandler();
+        this.SaveLoaded = new EventHandler();
 
         Object.defineProperty(this, 'character', {
-            get() { return this._char },
+            get() { return this.currentCharacter },
             set(value) {
-                this._char = value;
-                this.charChanged.dispatch('charchanged');
+                let oldChar = this.currentCharacter?.key;
+
+                this.currentCharacter = value;
+
+                if (!oldChar) {
+                    oldChar = this.currentCharacter.key;
+                }
+                else {
+                    this.previousCharacter = this.saveObj.characters[oldChar];
+                }
+
+                this.CharacterChanged.invoke('charchanged', { oldChar: oldChar });
             }
         });
-
-
-        //this.character = {
-        //    obj: null,
-        //    emmitter: new EventEmitter(),
-        //    get character() { return this },
-        //    set character(value) {
-        //        this.obj = value;
-        //        this.emmitter.dispatch('charchanged');
-        //    }
-        //};
     }
 }
-
-const charChanged = new Event('charchanged');

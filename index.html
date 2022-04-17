@@ -13,10 +13,12 @@
     <script type="text/javascript" src="https://kit.fontawesome.com/f5341e91eb.js"></script>
     <script type="text/javascript" src="scripts/filesaver.js"></script>
     <script type="text/javascript" src="scripts/util.js"></script>
+    <script type="text/javascript" src="scripts/internal.js"></script>
     <script type="text/javascript" src="ui/input.js"></script>
-    <script type="text/javascript" src="ui/views.js"></script>
+    <script type="text/javascript" src="ui/layout.js"></script>
     <script type="text/javascript" src="data/global.js"></script>
     <script type="text/javascript" src="data/save.js"></script>
+    <script type="text/javascript" src="data/binding.js"></script>
 
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
     <link type="text/css" rel="stylesheet" href="styles/bootstrap-mod.css" />
@@ -28,33 +30,30 @@
     <script>
         //in case they switch to using a custom extension at some point like they do with coc2
         const fileExtension = '.json';
-
         const save = new Save();
 
         $(() => {
-            $('#divSaveFile').hide();
-            $('#inputSaveFileName').hide();
-            $('#inputLoadFile').attr('accept', fileExtension);
-
-            $('#toolbarWrapper').collapse();
-            $('#toolbarWrapper').show();
-
-            //$('input').blur((e) => {
-            //    event.target.checkValidity();
-            //}).on('invalid', (e) => {
-            //    //setTimeout(function () { $(event.target).focus(); }, 50);
-            //    alert('a');
-            //});
-
-            //document.getElementById('toolbarWrapper').toggle();
+            $('#toolbarContainer').collapse();
+            $('#toolbarContainer').show();
 
             $('#btnDisclaimer').on('click', () => {
-                $('#divDisclaimer').hide();
+                $('#disclaimer').hide();
                 doLoad();
             });
         });
 
         function doLoad() {
+            $('#loadFile').attr('accept', fileExtension);
+
+            $('#editField-character').on('change', function () {
+                const key = $(this).val();
+                save.character = {
+                    obj: save.saveObj.characters[key],
+                    key: key
+                };
+                //$('.nav-tabs button:first').tab('show'); //this might be annoying
+            });
+
             // #region File handling
             $('body').on('dragenter dragleave dragover', (e) => {
                 e.preventDefault();
@@ -101,63 +100,43 @@
 
                             save.saveFile = file;
                             save.saveObj = json;
-                            
+                            save.oldSaveObj = json;
 
-                            const saveContainer = $('#divSaveFile');
-                            const inputFileName = $('#inputSaveFileName');
-                            if (!saveContainer.is(':visible')) {
-                                saveContainer.show();
+                            const select = $('#editField-character');
+                            select.empty();
+
+                            Object.keys(save.saveObj.characters).forEach(k => {
+                                const option = document.createElement('option');
+                                option.value = k;
+                                option.text = k;
+                                option.selected = false;
+                                select.append(option);
+                            });
+
+                            if (select.attr('disabled')) {
+                                select.removeAttr('disabled');
                             }
-                            if (!inputFileName.is(':visible')) {
-                                inputFileName.show();
+
+                            select.val('PC');
+
+                            save.character = {
+                                obj: save.saveObj.characters.PC,
+                                key: 'PC'
                             }
 
-                            inputFileName.val(save.saveFile.name);
+                            save.SaveLoaded.invoke('saveloaded');
 
-
-                            const gameInstance = save.saveObj.gameInstanceInfo;
-                            const flags = save.saveObj.flags;
-                            const pc = save.saveObj.characters.PC;
-
-                            //--placeholder--
-                            const tabGeneral = $('#tabGeneral');
-                            tabGeneral.append(new Tab([
-                                new Row([
-                                    new Group('General', [
-                                        new TextField2('ballFullness', 'Ball')
-                                        //new TextField(gameInstance, 'name', 'Name', null, (newName) => {
-                                        //    updateMailState(save.saveObj, 'ToCache', newName + ' Steele');
-                                        //}),
-                                        //new TextField(flags, 'PC_EMAIL_ADDRESS', 'Email', '@SteeleTech.corp', (newEmail) => {
-                                        //    updateMailState(save.saveObj, 'ToAddressCache', newEmail + '@SteeleTech.corp');
-                                        //}),
-                                        //new IntegerField(pc, 'credits', 'Credits', null, 0),
-                                        //new IntegerField(save.saveObj, 'days', 'Days', 'days', 0),
-                                        //new IntegerField(save.saveObj, 'hours', 'Hours', 'hours', 0, 23),
-                                        //new IntegerField(save.saveObj, 'minutes', 'Minutes', 'minutes', 0, 59)
-                                    ]),
-                                    new Group('Advancement', [
-                                        //new IntegerField(pc, 'level', 'Level', null, 0, 10),
-                                        //new SelectField(globalKeys.ValidTypes.Ear, pc, 'earType', 'Ear Type')
-                                    ])
-                                ]),
-                                new Row([
-                                    new Group('Stats (only modifiers atm)', [
-                                        //new IntegerField(pc, 'physiqueMod', 'Physique Mod', null, 0),
-                                        //new IntegerField(pc, 'reflexesMod', 'Reflexes Mod', null, 0),
-                                        //new IntegerField(pc, 'aimMod', 'Aim Mod', null, 0),
-                                        //new IntegerField(pc, 'intelligenceMod', 'Intelligence Mod', null, 0),
-                                        //new IntegerField(pc, 'willpowerMod', 'Willpower Mod', null, 0),
-                                        //new IntegerField(pc, 'libidoMod', 'Libido Mod', null, 0, 100)
-                                    ])
-                                ])
-                            ]));
-
-                            save.character = save.saveObj.characters.PC;
-
-                            $('#btnSaveFile').attr('disabled', false);
-                            $('#divNoSave').hide();
+                            $('#saveFile').attr('disabled', false);
+                            $('#saveName').attr('disabled', false);
+                            $('#saveName').val(save.saveFile.name);
                             alert("Save file loaded!");
+
+                            $('.nav-tabs button:first').tab('show');
+                            window.scrollTo({
+                                top: 0,
+                                left: 0,
+                                behavior: 'smooth'
+                            })
                         });
 
 
@@ -170,8 +149,8 @@
                 }
             }
 
-            $('#inputLoadFile').on('change', () => {
-                const input = $('#inputLoadFile');
+            $('#loadFile').on('change', () => {
+                const input = $('#loadFile');
                 var file = input.prop('files')[0];
                 if (!file) {
                     alert('Error loading the file, please try again.');
@@ -181,16 +160,16 @@
                 }
             });
 
-            $('#inputSaveFileName').on('focus', () => {
-                const input = $('#inputSaveFileName');
+            $('#saveName').on('focus', () => {
+                const input = $('#saveName');
                 const val = input.val();
                 if (val.lastIndexOf(fileExtension) == val.length - 5) {
                     input.val(val.substring(0, val.lastIndexOf(fileExtension)));
                 }
             });
 
-            $('#inputSaveFileName').on('blur', () => {
-                const input = $('#inputSaveFileName');
+            $('#saveName').on('blur', () => {
+                const input = $('#saveName');
                 const requiredLength = 1;
                 const val = input.val();
                 if (val.length >= requiredLength) {
@@ -202,9 +181,9 @@
                 }
             });
 
-            $('#btnSaveFile').on('click', () => {
+            $('#saveFile').on('click', () => {
                 const blob = new Blob([JSON.stringify(save.saveObj)], { type: 'text/json' });
-                var fileName = $('#inputSaveFileName').val();
+                var fileName = $('#saveName').val();
                 if (!fileName) {
                     fileName = "unnamed" + fileExtension;
                 }
@@ -213,16 +192,200 @@
             // #endregion
 
             // #region UI
+            // #region Game
+            $('#tabGame').append(new Tab([
+                new Row([
+                    new Group('Internal', [
+                        new TextField(new Binding('PC_EMAIL_ADDRESS', 'flags'), 'E-Mail', null, (newEmail) => {
+                            updateMailState(save.saveObj, 'ToAddressCache', newEmail + '@SteeleTech.corp');
+                        }),
+                        new TextField(new Binding('note', 'gameInstanceInfo'), 'Note'),
+                        new IntegerField(new Binding('days', '.'), 'Days', 'days', 0),
+                        new IntegerField(new Binding('hours', '.'), 'Hours', 'hours', 0, 23),
+                        new IntegerField(new Binding('minutes', '.'), 'Minutes', 'minutes', 0, 59)
+                    ]),
+                    new Group('Game Settings', [
+                        new SwitchField(new Binding('easyMode', '.'), 'Easy Mode'),
+                        new SwitchField(new Binding('sillyMode', '.'), 'Silly Mode'),
+                        new SwitchField(new Binding('miniMapVisible', 'gameInstanceInfo'), 'Minimap visible'),
+                        new SwitchField(new Binding('minimapRolledOut', 'gameInstanceInfo'), 'Minimap rolled out'),
+                        new SwitchField(new Binding('bustRolledOut', 'gameInstanceInfo'), 'Bust rolled out'),
+                        new SwitchField(new Binding('dateTimeVisible', 'gameInstanceInfo'), 'Date and Time visible')
+                    ])
+                ])
+            ]));
+            // #endregion
+
+            // #region Stats
+            $('#tabStats').append(new Tab([
+                new Row([
+                    new Group('General', [
+                        new TextField(new CharacterBinding('short'), 'Name', null, (newName) => {
+                            if (save.character.key == 'PC') {
+                                save.saveObj.gameInstanceInfo.name = newName;
+                                save.character.obj.uniqueName = newName;
+                                updateMailState(save.saveObj, 'ToCache', newName + ' Steele');
+                            }
+                        }),
+                        new IntegerField(new CharacterBinding('credits'), 'Credits', null, 0),
+                        new IntegerField(new CharacterBinding('personality'), 'Personality', null, 0, 100),
+                        new IntegerField(new CharacterBinding('exhibitionismRaw'), 'Exhibitionism', null, 0, 100)
+
+                    ]),
+                    new Group('Advancement', [
+                        new IntegerField(new CharacterBinding('level'), 'Level', null, 0, 10),
+                        new IntegerField(new CharacterBinding('XPRaw'), 'XP', null, 0),
+                        new IntegerField(new CharacterBinding('unspentStatPoints'), 'Stat Points', null, 0)
+                    ]),
+                    new Group('Shape', [
+                        new IntegerField(new CharacterBinding('tallness'), 'Height', 'inches', 0),
+                        new IntegerField(new CharacterBinding('thickness'), 'Thickness', null, 0, 100),
+                        new IntegerField(new CharacterBinding('tone'), 'Tone', null, 0, 100),
+                        new IntegerField(new CharacterBinding('femininity'), 'Femininity', null, 0, 100)
+                    ]),
+                ]),
+                new Row([
+                    new Group('Core', [
+                        new NestedGroup('', [
+                            new IntegerField(new CharacterBinding('Internal_aimRaw'), 'Aim Raw', null, 0),
+                            new IntegerField(new CharacterBinding('Internal_intelligenceRaw'), 'Intelligence Raw', null, 0),
+                            new IntegerField(new CharacterBinding('Internal_physiqueRaw'), 'Physique Raw', null, 0),
+                            new IntegerField(new CharacterBinding('Internal_reflexesRaw'), 'Reflexes Raw', null, 0),
+                            new IntegerField(new CharacterBinding('Internal_willpowerRaw'), 'Willpower Raw', null, 0),
+                            new IntegerField(new CharacterBinding('Internal_libidoRaw'), 'Libido Raw', null, 0, 100),
+                            new IntegerField(new CharacterBinding('Internal_taintRaw'), 'Taint Raw', null, 0, 100)
+                        ]),
+                        new NestedGroup('', [
+                            new IntegerField(new CharacterBinding('aimMod'), 'Aim Mod', null, 0),
+                            new IntegerField(new CharacterBinding('intelligenceMod'), 'Intelligence Mod', null, 0),
+                            new IntegerField(new CharacterBinding('physiqueMod'), 'Physique Mod', null, 0),
+                            new IntegerField(new CharacterBinding('reflexesMod'), 'Reflexes Mod', null, 0),
+                            new IntegerField(new CharacterBinding('willpowerMod'), 'Willpower Mod', null, 0),
+                            new IntegerField(new CharacterBinding('libidoMod'), 'Libido Mod', null, 0, 100),
+                            new IntegerField(new CharacterBinding('taintMod'), 'Taint Mod', null, 0, 100)
+                        ])
+                    ]),
+                    new Group('Combat', [
+                        new NestedGroup('', [
+                            new IntegerField(new CharacterBinding('HPRaw'), 'HP Raw', null, 0),
+                            new IntegerField(new CharacterBinding('energyRaw'), 'Energy Raw', null, 0),
+                            new IntegerField(new CharacterBinding('lustRaw'), 'Lust Raw', null, 0),
+                            new IntegerField(new CharacterBinding('shieldsRaw'), 'Shields Raw', null, 0)
+                        ]),
+                        new NestedGroup('', [
+                            new IntegerField(new CharacterBinding('HPMod'), 'HP Mod', null, 0),
+                            new IntegerField(new CharacterBinding('energyMod'), 'Energy Mod', null, 0),
+                            new IntegerField(new CharacterBinding('lustMod'), 'Lust Mod', null, 0)
+                        ])
+                    ]),
+                ])
+            ]));
+            // #endregion
+
+            // #region Head
+            $('#tabHead').append(new Tab([
+                new Row([
+                    new Group('Head', [
+                        new SelectField(globalKeys.HairType, new CharacterBinding('hairType', ValueType.Integer), 'Hair Type'),
+                        new FloatField(new CharacterBinding('hairLength'), 'Hair Length', 'inches', 0),
+                        new TextField(new CharacterBinding('hairColor'), 'Hair Color'),
+                        //hair style todo
+                        new SelectField(globalKeys.ValidTypes.Ear, new CharacterBinding('earType', ValueType.Integer), 'Ear Type'),
+                        new FloatField(new CharacterBinding('earLength'), 'Ear Length', 'inches', 0),
+                        //todo figure out ear flags
+                        new SelectField(globalKeys.ValidTypes.Antennae, new CharacterBinding('antennaeType', ValueType.Integer), 'Antennae Type'),
+                        new IntegerField(new CharacterBinding('antennae'), 'Antennae Count', 0),
+                        new SelectField(globalKeys.ValidTypes.Horn, new CharacterBinding('hornType', ValueType.Integer), 'Horn Type'),
+                        new IntegerField(new CharacterBinding('horns'), 'Horn Count', 0),
+                        new FloatField(new CharacterBinding('hornLength'), 'Horn Length', 'inches', 0)
+                    ]),
+                    new Group('Face', [
+                        new SelectField(globalKeys.ValidTypes.Face, new CharacterBinding('faceType', ValueType.Integer), 'Face Type'),
+                        //todo figure out face flags
+                        new SelectField(globalKeys.ValidTypes.Eye, new CharacterBinding('eyeType', ValueType.Integer), 'Eye Type'),
+                        new TextField(new CharacterBinding('eyeColor'), 'Hair Color'),
+                        new SelectField(globalKeys.ValidTypes.Tongue, new CharacterBinding('tongueType', ValueType.Integer), 'Tongue Type'),
+                        //todo figure out tongue flags
+                        new TextField(new CharacterBinding('lipColor'), 'Lip Color'),
+                        new IntegerField(new CharacterBinding('lipMod'), 'Lip Mod (Size)', 0),
+                        new FloatField(new CharacterBinding('beardLength'), 'Beard Length', 'inches', 0),
+                        new SelectField(globalKeys.HairType, new CharacterBinding('beardType', ValueType.Integer), 'Beard Type'),
+                        // todo beard style
+                    ])
+                ])
+            ]));
+            // #endregion
+
+            // #region Body
+            $('#tabBody').append(new Tab([
+                new Row([
+                    new Group('General', [
+                        new SwitchField(new CharacterBinding('gills'), 'Has Gills'),
+                        new FloatField(new CharacterBinding('elasticity'), 'Elasticity', 0),
+                        new SelectField(globalKeys.GenitalSpot, new CharacterBinding('genitalSpot', ValueType.Integer), 'Genital Spot'),
+                        new NestedGroup('', [
+                            new IntegerField(new CharacterBinding('hipRatingRaw'), 'Hip Rating Raw', 0),
+                            new IntegerField(new CharacterBinding('buttRatingRaw'), 'Butt Rating Raw', 0),
+                            new IntegerField(new CharacterBinding('bellyRatingRaw'), 'Belly Rating Raw', 0),
+                        ]),
+                        new NestedGroup('', [
+                            new IntegerField(new CharacterBinding('hipRatingMod'), 'Hip Rating Mod', 0),
+                            new IntegerField(new CharacterBinding('buttRatingMod'), 'Butt Rating Mod', 0),
+                            new IntegerField(new CharacterBinding('bellyRatingMod'), 'Belly Rating Mod', 0),
+                        ])
+                    ]),
+                    new Group('Butt', [
+                        //todo virgin
+                        new IntegerField(new CharacterBinding('minLooseness', null, 'ass'), 'Min Looseness', 0),
+                        new IntegerField(new CharacterBinding('bonusCapacity', null, 'ass'), 'Bonus Capacity', 0),
+                        //todo ass flags
+                        new NestedGroup('', [
+                            new IntegerField(new CharacterBinding('loosenessRaw', null, 'ass'), 'Looseness Raw', 0),
+                            new IntegerField(new CharacterBinding('wetnessRaw', null, 'ass'), 'Wetness Raw', 0)
+                        ]),
+                        new NestedGroup('', [
+                            new IntegerField(new CharacterBinding('loosenessMod', null, 'ass'), 'Looseness Mod', 0),
+                            new IntegerField(new CharacterBinding('wetnessMod', null, 'ass'), 'Wetness Mod', 0)
+                        ])
+                    ])
+                ]),
+                new Row([
+                    new Group('Skin', [
+                        new SelectField(globalKeys.SkinType, new CharacterBinding('skinType', ValueType.Integer), 'Skin Type'),
+                        new TextField(new CharacterBinding('skinTone'), 'Skin Tone'),
+                        new TextField(new CharacterBinding('skinAccent'), 'Skin Accent'),
+                        new TextField(new CharacterBinding('furColor'), 'Fur Color'),
+                        new TextField(new CharacterBinding('scaleColor'), 'Scale Color'),
+                        //todo skin flags
+                    ]),
+                    new Group('Wings', [
+                        new SelectField(globalKeys.ValidTypes.Wing, new CharacterBinding('wingType', ValueType.Integer), 'Wing Type'),
+                        new IntegerField(new CharacterBinding('wingCount'), 'Wing Count', 0)
+                    ])
+                ]),
+                new Row([
+                    new Group('Arms', [
+                        new SelectField(globalKeys.ValidTypes.Arm, new CharacterBinding('armType', ValueType.Integer), 'Arm Type'),
+                        //todo arm flags
+                    ]),
+                    new Group('Legs', [
+                        new SelectField(globalKeys.ValidTypes.Leg, new CharacterBinding('legType', ValueType.Integer), 'Leg Type'),
+                        new IntegerField(new CharacterBinding('legCount'), 'Leg Count', 0),
+                        //todo leg flags
+                    ])
+                ])
+            ]));
+            // #endregion
 
             // #endregion
 
-            $('#divContent').show();
+            $('#content').show();
         }
     </script>
 </head>
 
 <body class="bg-secondary text-light needs-validation">
-    <div id="divDisclaimer" class="container-fluid text-center p-3">
+    <div id="disclaimer" class="container-fluid text-center p-3">
         <h1 class="display-4">TiTS Save Editor</h1>
         <p>Edit saves at your own risk. If you break or corrupt your savefile don't blame the editor!</p>
         <p>Only JavaScript version save files are supported.</p>
@@ -241,34 +404,47 @@
         <button id="btnDisclaimer" type="button" class="btn btn-info mt-5">Continue</button>
     </div>
 
-    <div id="divContent" class="container-fluid hidden">
-        <div id="toolbarWrapper">
-            <div id="divToolbar" class="bg-info sticky-top row g-0">
-                <div class="col p-2">
-                    <div>
-                        <input type="text" class="form-control form-control-sm" id="inputSaveFileName" />
+    <div id="content" class="container-fluid hidden">
+        <div class="sticky-top">
+            <div id="toolbarContainer">
+                <div id="divToolbar" class="bg-info row g-0">
+                    <div class="col p-2">
+                        <div>
+                            <label class="visually-hidden" for="saveName">Save File Name</label>
+                            <input type="text" class="form-control form-control-sm" id="saveName" disabled />
+                        </div>
                     </div>
-                </div>
-                <div class="col-sm-auto p-2 text-center">
-                    <div id="divLoadFile" class="d-inline-block">
-                        <button type="button" class="btn btn-sm btn-primary" onclick="inputLoadFile.click()">Load file</button>
-                        <input class="form-control" type="file" id="inputLoadFile" hidden="hidden">
-                    </div>
-                    <div id="divSaveFile" class="d-inline-block">
-                        <button id="btnSaveFile" type="button" class="btn btn-sm btn-primary" disabled>Save file</button>
+                    <div class="col-sm-auto p-2 text-center">
+                        <div id="divLoadFile" class="d-inline-block">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="loadFile.click()">Load file</button>
+                            <label class="visually-hidden" for="loadFile">Load File</label>
+                            <input class="form-control" type="file" id="loadFile" hidden="hidden">
+                        </div>
+                        <div id="saveFileContainer" class="d-inline-block">
+                            <button id="saveFile" type="button" class="btn btn-sm btn-primary" disabled>Save file</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="bg-info text-center mx-auto px-3 py-1 expand-icon rounded-bottom position-relative">
-            <a data-bs-toggle="collapse" href="#toolbarWrapper" role="button" aria-expanded="true" aria-controls="toolbarWrapper"
-               class="link-light underline text-decoration-none stretched-link"><i class="fa-solid fa-arrows-up-down"></i></a>
+            <div class="bg-info text-center mx-auto px-3 py-1 expand-icon rounded-bottom position-relative opacity-50">
+                <a data-bs-toggle="collapse" href="#toolbarContainer" role="button" aria-expanded="true" aria-controls="toolbarContainer"
+                   class="link-light underline text-decoration-none stretched-link"><i class="fa-solid fa-arrows-up-down"></i></a>
+            </div>
         </div>
 
-        <div id="divEditor" class="mt-3">
+
+        <div class="text-light pb-2 px-3 w-100">
+            <label class="label-sm" for="editField-character">Character</label>
+            <select id="editField-character" class="form-select form-select-sm" disabled></select>
+        </div>
+
+        <div id="editor" class="mt-3">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="navGeneral" data-bs-toggle="tab" data-bs-target="#tabGeneral" type="button" role="tab" aria-controls="tabGeneral" aria-selected="true">General</button>
+                    <button class="nav-link active" id="navGame" data-bs-toggle="tab" data-bs-target="#tabGame" type="button" role="tab" aria-controls="tabGame" aria-selected="true">Game</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="navStats" data-bs-toggle="tab" data-bs-target="#tabStats" type="button" role="tab" aria-controls="tabStats" aria-selected="false">Stats</button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="navHead" data-bs-toggle="tab" data-bs-target="#tabHead" type="button" role="tab" aria-controls="tabHead" aria-selected="false">Head</button>
@@ -287,16 +463,13 @@
                 </li>
             </ul>
             <div class="tab-content p-2">
-                <div class="tab-pane fade show active" id="tabGeneral" role="tabpanel" aria-labelledby="navGeneral"></div>
+                <div class="tab-pane fade show active" id="tabGame" role="tabpanel" aria-labelledby="navGame"></div>
+                <div class="tab-pane fade" id="tabStats" role="tabpanel" aria-labelledby="navStats"></div>
                 <div class="tab-pane fade" id="tabHead" role="tabpanel" aria-labelledby="navHead"></div>
                 <div class="tab-pane fade" id="tabBody" role="tabpanel" aria-labelledby="navBody"></div>
                 <div class="tab-pane fade" id="tabCrotch" role="tabpanel" aria-labelledby="navCrotch"></div>
                 <div class="tab-pane fade" id="tabPerks" role="tabpanel" aria-labelledby="navPerks"></div>
                 <div class="tab-pane fade" id="tabFlags" role="tabpanel" aria-labelledby="navFlags"></div>
-            </div>
-
-            <div id="divNoSave" class="d-flex justify-content-center align-items-center px-2">
-                <h4>No save loaded, please click <b>Load file</b> to begin.</h4>
             </div>
         </div>
     </div>

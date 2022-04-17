@@ -128,4 +128,10 @@ input[type=number] {
 
 .expand-icon {
     width: 3em;
+    transition-duration: 350ms;
 }
+
+    .expand-icon:hover, .expand-icon:active, .expand-icon:focus {
+        opacity: 1 !important;
+        transition-duration: 350ms;
+    }
