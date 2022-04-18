@@ -92,9 +92,9 @@
 
 .nav {
     flex-wrap: nowrap !important;
-    overflow-y: scroll !important;
-    overflow-y: scroll;
-    overflow-x: hidden;
+    /* overflow-y: scroll !important;
+    overflow-y: scroll; */
+    overflow-y: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
