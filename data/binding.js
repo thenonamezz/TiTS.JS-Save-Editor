@@ -22,8 +22,12 @@ function resolveBinding(binding, input, onChanged) {
             resolveGlobalBinding(binding.obj, binding.key, input, binding.valueType, binding.pcOnly);
             break;
 
-        default:
+        case BindingType.Character:
             resolveCharacterBinding(binding.key, input, binding.valueType, binding.obj);
+            break;
+
+        default:
+            resolveFlagBinding(binding.key, input, binding.obj);
             break;
     }
 
@@ -116,6 +120,58 @@ function resolveGlobalBinding(obj, key, input, valueType, pcOnly = false) {
     }
 }
 
+function resolveFlagBinding(key, container, obj) {
+    if (save) {
+        save.CharacterChanged.listen('charchanged', (e) => {
+            if (save.previousCharacter) {
+                // If the property exists, reset it to a normal value with no get/set, if it's undefined it means it's looking
+                // at something that's only available to PC (like xpraw). If a property that doesn't originally exist in
+                // a character is defined with this method everything blows up when switching active character.
+
+                const object = obj == null ? save.saveObj.characters[e.oldChar] : save.saveObj.characters[e.oldChar][obj];
+
+                if (object[key] != undefined) {
+                    Object.defineProperty(object, key, {
+                        value: getSelectedFlags(container)
+                    });
+                }
+            }
+
+            const object = obj == null ? save.character.obj : save.character.obj[obj];
+
+            const initialValue = object[key];
+
+            Object.defineProperty(object, key, {
+                get() { return getSelectedFlags(container); },
+                set(values) { setSelectedFlags(container, values); }
+            });
+
+            object[key] = initialValue;
+
+            const inputs = $(container).find('.form-check-input');
+            inputs.each(function () {
+                if ($(this).attr('disabled')) {
+                    $(this).removeAttr('disabled');
+                }
+            })
+        });
+    }
+    else {
+        throw new Error('Save object not initialized');
+    }
+}
+
+function getSelectedFlags(container) {
+    let flags = [];
+    $(container).find('.form-check-input').filter(':checked').each(function () { flags.push(+$(this).val()) });
+    return flags;
+}
+
+function setSelectedFlags(container, values) {
+    const inputs = $(container).find('.form-check-input');
+    inputs.each(function () { $(this).prop('checked', values.includes(+$(this).val())) });
+}
+
 //the game should be able to parse strings as numbers just fine but just in case
 function convertValue(input, type) {
     let value;
@@ -124,9 +180,11 @@ function convertValue(input, type) {
         case ValueType.Float:
             value = +input.value;
             break;
+
         case ValueType.Boolean:
             value = input.checked;
             break;
+
         default:
             value = input.value;
             break;

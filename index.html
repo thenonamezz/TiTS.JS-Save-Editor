@@ -102,6 +102,11 @@
                             save.saveObj = json;
                             save.oldSaveObj = json;
 
+                            // handle if another save is loaded on top of a current one
+                            save.previousCharacter = null;
+                            save.currentCharacter = null;
+                            $("#loadFile").val(null);
+
                             const select = $('#editField-character');
                             select.empty();
 
@@ -131,12 +136,13 @@
                             $('#saveName').val(save.saveFile.name);
                             alert("Save file loaded!");
 
-                            $('.nav-tabs button:first').tab('show');
-                            window.scrollTo({
-                                top: 0,
-                                left: 0,
-                                behavior: 'smooth'
-                            })
+                            // this might be annoying
+                            //$('.nav-tabs button:first').tab('show');
+                            //window.scrollTo({
+                            //    top: 0,
+                            //    left: 0,
+                            //    behavior: 'smooth'
+                            //})
                         });
 
 
@@ -237,7 +243,7 @@
                         new IntegerField(new CharacterBinding('XPRaw'), 'XP', null, 0),
                         new IntegerField(new CharacterBinding('unspentStatPoints'), 'Stat Points', null, 0)
                     ]),
-                    new Group('Shape', [
+                    new Group('Appearance', [
                         new IntegerField(new CharacterBinding('tallness'), 'Height', 'inches', 0),
                         new IntegerField(new CharacterBinding('thickness'), 'Thickness', null, 0, 100),
                         new IntegerField(new CharacterBinding('tone'), 'Tone', null, 0, 100),
@@ -286,31 +292,46 @@
             $('#tabHead').append(new Tab([
                 new Row([
                     new Group('Head', [
+                        new SelectField(globalKeys.ValidTypes.Antennae, new CharacterBinding('antennaeType', ValueType.Integer), 'Antennae Type'),
+                        new IntegerField(new CharacterBinding('antennae'), 'Antennae Count', null, 0),
+                        new SelectField(globalKeys.ValidTypes.Horn, new CharacterBinding('hornType', ValueType.Integer), 'Horn Type'),
+                        new IntegerField(new CharacterBinding('horns'), 'Horn Count', null, 0),
+                        new FloatField(new CharacterBinding('hornLength'), 'Horn Length', 'inches', 0)
+                    ]),
+                    new Group('Hair', [
                         new SelectField(globalKeys.HairType, new CharacterBinding('hairType', ValueType.Integer), 'Hair Type'),
                         new FloatField(new CharacterBinding('hairLength'), 'Hair Length', 'inches', 0),
                         new TextField(new CharacterBinding('hairColor'), 'Hair Color'),
-                        //hair style todo
-                        new SelectField(globalKeys.ValidTypes.Ear, new CharacterBinding('earType', ValueType.Integer), 'Ear Type'),
-                        new FloatField(new CharacterBinding('earLength'), 'Ear Length', 'inches', 0),
-                        //todo figure out ear flags
-                        new SelectField(globalKeys.ValidTypes.Antennae, new CharacterBinding('antennaeType', ValueType.Integer), 'Antennae Type'),
-                        new IntegerField(new CharacterBinding('antennae'), 'Antennae Count', 0),
-                        new SelectField(globalKeys.ValidTypes.Horn, new CharacterBinding('hornType', ValueType.Integer), 'Horn Type'),
-                        new IntegerField(new CharacterBinding('horns'), 'Horn Count', 0),
-                        new FloatField(new CharacterBinding('hornLength'), 'Horn Length', 'inches', 0)
-                    ]),
-                    new Group('Face', [
-                        new SelectField(globalKeys.ValidTypes.Face, new CharacterBinding('faceType', ValueType.Integer), 'Face Type'),
-                        //todo figure out face flags
-                        new SelectField(globalKeys.ValidTypes.Eye, new CharacterBinding('eyeType', ValueType.Integer), 'Eye Type'),
-                        new TextField(new CharacterBinding('eyeColor'), 'Hair Color'),
-                        new SelectField(globalKeys.ValidTypes.Tongue, new CharacterBinding('tongueType', ValueType.Integer), 'Tongue Type'),
-                        //todo figure out tongue flags
-                        new TextField(new CharacterBinding('lipColor'), 'Lip Color'),
-                        new IntegerField(new CharacterBinding('lipMod'), 'Lip Mod (Size)', 0),
+                        // todo hair style
                         new FloatField(new CharacterBinding('beardLength'), 'Beard Length', 'inches', 0),
                         new SelectField(globalKeys.HairType, new CharacterBinding('beardType', ValueType.Integer), 'Beard Type'),
                         // todo beard style
+                    ])
+                ]),
+                new Row([
+                    new Group('Face', [
+                        new SelectField(globalKeys.ValidTypes.Face, new CharacterBinding('faceType', ValueType.Integer), 'Face Type'),
+                        new FlagField(globalKeys.ValidFlags.Face, new Binding('faceFlags'), 'Face Flags')
+                    ]),
+                    new Group('Tongue', [
+                        new SelectField(globalKeys.ValidTypes.Tongue, new CharacterBinding('tongueType', ValueType.Integer), 'Tongue Type'),
+                        new FlagField(globalKeys.ValidFlags.Tongue, new Binding('tongueFlags'), 'Tongue Flags')
+                    ])
+                ]),
+                new Row([
+                    new Group('Lips', [
+                        new TextField(new CharacterBinding('lipColor'), 'Lip Color'),
+                        new IntegerField(new CharacterBinding('lipMod'), 'Lip Mod', null, 0)
+                    ]),
+                    new Group('Ears', [
+                        new SelectField(globalKeys.ValidTypes.Ear, new CharacterBinding('earType', ValueType.Integer), 'Ear Type'),
+                        new FloatField(new CharacterBinding('earLength'), 'Ear Length', 'inches', 0),
+                        //find ear flags
+                        //new FlagField(globalKeys.ValidFlags.Ear, new Binding('earFlags'), 'Ear Flags'),
+                    ]),
+                    new Group('Eyes', [
+                        new SelectField(globalKeys.ValidTypes.Eye, new CharacterBinding('eyeType', ValueType.Integer), 'Eye Type'),
+                        new TextField(new CharacterBinding('eyeColor'), 'Eye Color')
                     ])
                 ])
             ]));
@@ -321,60 +342,157 @@
                 new Row([
                     new Group('General', [
                         new SwitchField(new CharacterBinding('gills'), 'Has Gills'),
-                        new FloatField(new CharacterBinding('elasticity'), 'Elasticity', 0),
+                        new FloatField(new CharacterBinding('elasticity'), 'Elasticity', null,  0),
                         new SelectField(globalKeys.GenitalSpot, new CharacterBinding('genitalSpot', ValueType.Integer), 'Genital Spot'),
                         new NestedGroup('', [
-                            new IntegerField(new CharacterBinding('hipRatingRaw'), 'Hip Rating Raw', 0),
-                            new IntegerField(new CharacterBinding('buttRatingRaw'), 'Butt Rating Raw', 0),
-                            new IntegerField(new CharacterBinding('bellyRatingRaw'), 'Belly Rating Raw', 0),
+                            new IntegerField(new CharacterBinding('hipRatingRaw'), 'Hip Rating Raw', null, 0),
+                            new IntegerField(new CharacterBinding('buttRatingRaw'), 'Butt Rating Raw', null, 0),
+                            new IntegerField(new CharacterBinding('bellyRatingRaw'), 'Belly Rating Raw', null, 0),
                         ]),
                         new NestedGroup('', [
-                            new IntegerField(new CharacterBinding('hipRatingMod'), 'Hip Rating Mod', 0),
-                            new IntegerField(new CharacterBinding('buttRatingMod'), 'Butt Rating Mod', 0),
-                            new IntegerField(new CharacterBinding('bellyRatingMod'), 'Belly Rating Mod', 0),
+                            new IntegerField(new CharacterBinding('hipRatingMod'), 'Hip Rating Mod', null, 0),
+                            new IntegerField(new CharacterBinding('buttRatingMod'), 'Butt Rating Mod', null, 0),
+                            new IntegerField(new CharacterBinding('bellyRatingMod'), 'Belly Rating Mod', null, 0),
                         ])
                     ]),
-                    new Group('Butt', [
-                        //todo virgin
-                        new IntegerField(new CharacterBinding('minLooseness', null, 'ass'), 'Min Looseness', 0),
-                        new IntegerField(new CharacterBinding('bonusCapacity', null, 'ass'), 'Bonus Capacity', 0),
-                        //todo ass flags
-                        new NestedGroup('', [
-                            new IntegerField(new CharacterBinding('loosenessRaw', null, 'ass'), 'Looseness Raw', 0),
-                            new IntegerField(new CharacterBinding('wetnessRaw', null, 'ass'), 'Wetness Raw', 0)
-                        ]),
-                        new NestedGroup('', [
-                            new IntegerField(new CharacterBinding('loosenessMod', null, 'ass'), 'Looseness Mod', 0),
-                            new IntegerField(new CharacterBinding('wetnessMod', null, 'ass'), 'Wetness Mod', 0)
-                        ])
-                    ])
-                ]),
-                new Row([
                     new Group('Skin', [
                         new SelectField(globalKeys.SkinType, new CharacterBinding('skinType', ValueType.Integer), 'Skin Type'),
                         new TextField(new CharacterBinding('skinTone'), 'Skin Tone'),
                         new TextField(new CharacterBinding('skinAccent'), 'Skin Accent'),
                         new TextField(new CharacterBinding('furColor'), 'Fur Color'),
                         new TextField(new CharacterBinding('scaleColor'), 'Scale Color'),
-                        //todo skin flags
-                    ]),
-                    new Group('Wings', [
-                        new SelectField(globalKeys.ValidTypes.Wing, new CharacterBinding('wingType', ValueType.Integer), 'Wing Type'),
-                        new IntegerField(new CharacterBinding('wingCount'), 'Wing Count', 0)
+                        //find skin flags
+                        //new FlagField(globalKeys.ValidFlags.Skin, new Binding('skinFlags'), 'Skin Flags')
                     ])
                 ]),
                 new Row([
+                    new Group('Wings', [
+                        new SelectField(globalKeys.ValidTypes.Wing, new CharacterBinding('wingType', ValueType.Integer), 'Wing Type'),
+                        new IntegerField(new CharacterBinding('wingCount'), 'Wing Count', null, 0)
+                    ]),
                     new Group('Arms', [
                         new SelectField(globalKeys.ValidTypes.Arm, new CharacterBinding('armType', ValueType.Integer), 'Arm Type'),
-                        //todo arm flags
+                        new FlagField(globalKeys.ValidFlags.Arm, new Binding('armFlags'), 'Arm Flags')
                     ]),
                     new Group('Legs', [
                         new SelectField(globalKeys.ValidTypes.Leg, new CharacterBinding('legType', ValueType.Integer), 'Leg Type'),
-                        new IntegerField(new CharacterBinding('legCount'), 'Leg Count', 0),
-                        //todo leg flags
+                        new IntegerField(new CharacterBinding('legCount'), 'Leg Count', null, 0),
+                        new FlagField(globalKeys.ValidFlags.Leg, new Binding('legFlags'), 'Leg Flags')
+                    ])
+                ]),
+                new Row([
+                    new Group('Butt', [
+                        //todo virgin
+                        new IntegerField(new CharacterBinding('minLooseness', null, 'ass'), 'Min Looseness', null, 0),
+                        new IntegerField(new CharacterBinding('bonusCapacity', null, 'ass'), 'Bonus Capacity', null, 0),
+                        //find ass flags
+                        //new FlagField(globalKeys.ValidFlags.Ass, new Binding('flags', 'ass'), 'Ass Flags'),
+                        new NestedGroup('', [
+                            new IntegerField(new CharacterBinding('loosenessRaw', null, 'ass'), 'Looseness Raw', null, 0),
+                            new IntegerField(new CharacterBinding('wetnessRaw', null, 'ass'), 'Wetness Raw', null, 0)
+                        ]),
+                        new NestedGroup('', [
+                            new IntegerField(new CharacterBinding('loosenessMod', null, 'ass'), 'Looseness Mod', null, 0),
+                            new IntegerField(new CharacterBinding('wetnessMod', null, 'ass'), 'Wetness Mod', null, 0)
+                        ])
+                    ]),
+                    new Group('Tail', [
+                        new SelectField(globalKeys.ValidTypes.Tail, new CharacterBinding('tailType', ValueType.Integer), 'Tail Type'),
+                        new IntegerField(new CharacterBinding('tailCount'), 'Tail Count', null, 0),
+                        new IntegerField(new CharacterBinding('tailVenom'), 'Tail Venom', null, 0, 100),
+                        new IntegerField(new CharacterBinding('tailRecharge'), 'Tail Recharge', null, 0),
+                        new SelectField(globalKeys.TailGenital, new CharacterBinding('tailGenital', ValueType.Integer), 'Tail Genital Type'),
+                        // find tail arg
+                        //new SelectField(globalKeys.TailGenital, new CharacterBinding('tailGenital', ValueType.Integer), 'Tail Genital Type'),
+                        new TextField(new CharacterBinding('tailGenitalColor'), 'Tail Genital Color'),
+                        new FlagField(globalKeys.ValidFlags.Tail, new Binding('tailFlags'), 'Tail Flags')
+                    ])
+                ]),
+                new Row([
+                    new Group('Milk', [
+                        new SelectField(globalKeys.FluidType, new CharacterBinding('milkType', ValueType.Integer), 'Milk Type'),
+                        new FloatField(new CharacterBinding('milkFullness'), 'Milk Fullness', null, 0),
+                        new IntegerField(new CharacterBinding('milkRate'), 'Milk Rate', null, 0),
+                        new IntegerField(new CharacterBinding('milkMultiplier'), 'Milk Multiplier', null, 0),
+                        new IntegerField(new CharacterBinding('milkStorageMultiplier'), 'Milk Storage Multiplier', null, 0)
+                    ]),
+                    new Group('Nipples', [
+                        new TextField(new CharacterBinding('nippleColor'), 'Nipple Color'),
+                        new IntegerField(new CharacterBinding('nipplesPerBreast'), 'Nipples Per Breast', null, 0),
+                        new FloatField(new CharacterBinding('nippleLengthRatio'), 'Nipple Length Ratio', null, 0),
+                        new FloatField(new CharacterBinding('nippleWidthRatio'), 'Nipple Width Ratio', null, 0),
+                        //find dicknipple type
+                        //new SelectField(globalKeys.ValidTypes.Dicknipple, new CharacterBinding('dickNippleType', ValueType.Integer), 'Dick Nipple Type'),
+                        new IntegerField(new CharacterBinding('dickNippleMultiplier'), 'Dick Nipple Multiplier', null, 0)
+                    ]),
+                    new Group('Breasts', [
+                        //todo figure out breasts
                     ])
                 ])
             ]));
+            // #endregion
+
+            // #region Crotch
+            $('#tabCrotch').append(new Tab([
+                // todo multiple array thingy
+                new Row([
+                    new Group('Male', [
+                        new NestedGroup('General', [
+
+                        ]),
+                        new NestedGroup('Penis', [
+
+                        ])
+                    ]),
+                ]),
+                new Row([
+                    new Group('Female', [
+                        new NestedGroup('General', [
+
+                        ]),
+                        new NestedGroup('Vagina', [
+
+                        ])
+                    ]),
+                ])
+            ]));
+            // #endregion
+
+            // #region
+            $('#tabPerks').append(new Tab([
+                new Row([
+                    new Group('Male', [
+                        new NestedGroup('General', [
+
+                        ]),
+                        new NestedGroup('Penis', [
+
+                        ])
+                    ]),
+                ]),
+                new Row([
+                    new Group('Female', [
+                        new NestedGroup('General', [
+
+                        ]),
+                        new NestedGroup('Vagina', [
+
+                        ])
+                    ]),
+                ])
+            ]));
+            // #endregion
+
+            // #region Inventory
+            $('#tabInventory').append(
+                document.createElement('p').textContent = 'Low priority, this can be achieved through the game cheat menu.'
+            );
+            // #endregion
+
+            // #region Key Items
+            $('#tabKeyItems').append(
+                document.createElement('p').textContent = 'Low priority, this can be achieved through the game cheat menu.'
+            );
             // #endregion
 
             // #endregion
@@ -384,7 +502,7 @@
     </script>
 </head>
 
-<body class="bg-secondary text-light needs-validation">
+<body class="bg-secondary text-light">
     <div id="disclaimer" class="container-fluid text-center p-3">
         <h1 class="display-4">TiTS Save Editor</h1>
         <p>Edit saves at your own risk. If you break or corrupt your savefile don't blame the editor!</p>
@@ -392,12 +510,14 @@
 
         <br /><br />
 
-        <div>
+        <div class="p-3">
             <h1 class="display-6">This project is still in development</h1>
             <p>
-                Although this page is published, in its current state it is not usable, still, you can track its progress through Github. If you
-                have any issue, suggestion, or feature request please post them in the Issues tab on the Github, I'll do my best to look through
-                those.
+                Although this page is published and is usable, in its current state it does not represent a finished product, you can track
+                its progress through <a class="link-warning" href="https://github.com/start-5/TiTS.JS-Save-Editor" target="_blank">Github</a>.
+                If you have any issue, suggestion, or feature request please post them in the
+                <a class="link-warning" href="https://github.com/start-5/TiTS.JS-Save-Editor/issues" target="_blank">Issues</a> tab on
+                the <a class="link-warning" href="https://github.com/start-5/TiTS.JS-Save-Editor" target="_blank">Github page</a>.
             </p>
         </div>
 
@@ -461,6 +581,12 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="navFlags" data-bs-toggle="tab" data-bs-target="#tabFlags" type="button" role="tab" aria-controls="tabFlags" aria-selected="false">Flags</button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="navInventory" data-bs-toggle="tab" data-bs-target="#tabInventory" type="button" role="tab" aria-controls="tabInventory" aria-selected="false">Inventory</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="navKeyItems" data-bs-toggle="tab" data-bs-target="#tabKeyItems" type="button" role="tab" aria-controls="tabKeyItems" aria-selected="false">Key Items</button>
+                </li>
             </ul>
             <div class="tab-content p-2">
                 <div class="tab-pane fade show active" id="tabGame" role="tabpanel" aria-labelledby="navGame"></div>
@@ -470,6 +596,8 @@
                 <div class="tab-pane fade" id="tabCrotch" role="tabpanel" aria-labelledby="navCrotch"></div>
                 <div class="tab-pane fade" id="tabPerks" role="tabpanel" aria-labelledby="navPerks"></div>
                 <div class="tab-pane fade" id="tabFlags" role="tabpanel" aria-labelledby="navFlags"></div>
+                <div class="tab-pane fade" id="tabInventory" role="tabpanel" aria-labelledby="navInventory"></div>
+                <div class="tab-pane fade" id="tabKeyItems" role="tabpanel" aria-labelledby="navKeyItems"></div>
             </div>
         </div>
     </div>

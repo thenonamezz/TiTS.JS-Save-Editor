@@ -173,10 +173,83 @@ class SwitchField extends Field {
 
         this.label.innerText = label;
         this.label.className += ' form-check-label';
-        this.resolveLabel(binding.key, label);
+        this.inputWrapper.appendChild(this.label);
 
         binding.valueType = ValueType.Boolean;
         resolveBinding(binding, this.input, onChanged);
+
+        return this.content;
+    }
+}
+
+class FlagField {
+    constructor(items, binding, label, onChanged = null) {
+        const expanded = true;
+
+        this.content = document.createElement('div');
+        this.content.className = 'accordion text-light my-3 w-100 pt-2';
+        this.content.id = 'flagEdit-' + binding.key;
+
+        this.item = document.createElement('div');
+        this.item.className = 'accordion-item';
+        this.header = document.createElement('h6');
+        this.header.className = 'accordion-header';
+        this.header.id = this.content.id + '-header';
+
+        this.button = document.createElement('button');
+        this.button.className = 'accordion-button' + (expanded ? '' : ' collapsed');
+        this.button.type = 'button';
+        this.button.setAttribute('data-bs-toggle', 'collapse');
+        this.button.setAttribute('aria-expanded', expanded);
+        this.button.textContent = label;
+
+        this.bodyContainer = document.createElement('div');
+        this.bodyContainer.className = 'accordion-collapse collapse' + (expanded ? ' show' : '');
+        this.bodyContainer.setAttribute('aria-labelledby', '#' + this.header.id);
+        this.bodyContainer.setAttribute('data-bs-parent', '#' + this.header.id);
+        this.bodyContainer.id = this.content.id + '-body';
+
+        this.button.setAttribute('aria-controls', this.bodyContainer.id);
+        this.button.setAttribute('data-bs-target', '#' + this.bodyContainer.id);
+
+        this.body = document.createElement('div');
+        this.body.className = 'accordion-body d-flex flex-wrap';
+
+        if (items.length) {
+            items.forEach(i => {
+                const container = document.createElement('div');
+                container.className = 'form-check form-switch flag-switch-row';
+                
+                const checkBox = document.createElement('input');
+                checkBox.type = 'checkbox';
+                checkBox.role = 'switch';
+                checkBox.value = +i.value;
+                checkBox.className = 'form-check-input';
+                checkBox.setAttribute('disabled', true);
+                checkBox.id = this.content.id + '-flag-' + i.value;
+
+                const label = document.createElement('label');
+                label.className = 'form-check-label label-sm';
+                label.htmlFor = checkBox.id;
+                label.textContent = i.name;
+
+                container.appendChild(checkBox);
+                container.appendChild(label);
+
+                this.body.appendChild(container);
+            })
+        }
+
+        this.header.appendChild(this.button);
+        this.bodyContainer.appendChild(this.body);
+
+        this.item.appendChild(this.header);
+        this.item.appendChild(this.bodyContainer);
+
+        this.content.appendChild(this.item);
+
+        binding.bindingType = BindingType.Flag;
+        resolveBinding(binding, this.body, onChanged);
 
         return this.content;
     }

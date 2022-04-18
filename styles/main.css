@@ -12,14 +12,14 @@
     color: #fff;
 }
 
-    .form-control:focus, .form-select:focus {
+    .form-control:focus, .form-select:focus, .accordion-button:focus {
         color: #fff;
         background-color: #333E52 !important;
         box-shadow: 0 0 0 .1rem rgba(255,255,255,.65);
     }
 
 
-    .form-control:hover, .form-select:hover {
+    .form-control:hover, .form-select:hover, .accordion-button:hover {
         background-color: #333E52 !important;
     }
 
@@ -94,6 +94,7 @@
     flex-wrap: nowrap !important;
     overflow-y: scroll !important;
     overflow-y: scroll;
+    overflow-x: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -135,3 +136,41 @@ input[type=number] {
         opacity: 1 !important;
         transition-duration: 350ms;
     }
+
+.accordion-button {
+    background-color: rgba(32, 39, 53, 0.2) !important;
+    color: #fff !important;
+    padding: .5rem !important;
+    font-size: 0.875rem !important;
+    /*border: 1px solid #aaa !important;*/
+}
+
+    .accordion-button::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='white' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+    }
+
+
+.accordion-item {
+    border: 1px solid #aaa !important;
+    background-color: transparent !important;
+}
+
+.flag-switch-row {
+    width: 33.33%;
+}
+
+@media only screen and (max-width: 992px) {
+    .flag-switch-row {
+        width: 50%;
+    }
+}
+
+.form-check-input:not(:checked) {
+    background-color: #333E52 !important;
+    border: 1px solid #aaa;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e")
+}
+
+.accordion-body {
+    padding: 1rem 0.5rem;
+}

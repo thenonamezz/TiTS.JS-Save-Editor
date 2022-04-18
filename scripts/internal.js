@@ -15,10 +15,12 @@ const ValueType = {
     String: 0,
     Integer: 1,
     Float: 2,
-    Boolean: 3
+    Boolean: 3,
+    Flag: 4
 }
 
 const BindingType = {
     Global: 0,
-    Character: 1
+    Character: 1,
+    Flag: 2
 }

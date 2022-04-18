@@ -65,7 +65,7 @@ class Group {
                     nestedContainer.className = 'row g-0';
 
                     nestedGroups.forEach(ng => {
-                        ng.className += ' col-sm-' + 12 / nestedGroups.length + ' px-1';
+                        ng.className += ' col-' + 12 / nestedGroups.length + ' px-1';
                         nestedContainer.appendChild(ng);
                     })
 
