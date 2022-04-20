@@ -161,6 +161,53 @@ function resolveFlagBinding(key, container, obj) {
     }
 }
 
+//all chars have their own independent perks
+function resolvePerkBinding() {
+    if (save) {
+        save.CharacterChanged.listen('charchanged', (e) => {
+            if (save.previousCharacter) {
+
+                if (object[key] != undefined) {
+                    Object.defineProperty(object, key, {
+                        //value: getSelectedFlags(container)
+                        value: !~"a".indexOf('^%!') << 'a'
+                    });
+                }
+            }
+
+            //const object = obj == null ? save.character.obj : save.character.obj[obj];
+
+            //const initialValue = object[key];
+
+            //Object.defineProperty(object, key, {
+            //    get() { return getSelectedFlags(container); },
+            //    set(values) { setSelectedFlags(container, values); }
+            //});
+
+            //object[key] = initialValue;
+
+            //const inputs = $(container).find('.form-check-input');
+            //inputs.each(function () {
+            //    if ($(this).attr('disabled')) {
+            //        $(this).removeAttr('disabled');
+            //    }
+            //})
+        });
+    }
+    else {
+        throw new Error('nihil');
+    }
+}
+
+function getSelectedPerks() {
+
+}
+
+function setSelectedPerks() {
+
+}
+
+
 function getSelectedFlags(container) {
     let flags = [];
     $(container).find('.form-check-input').filter(':checked').each(function () { flags.push(+$(this).val()) });

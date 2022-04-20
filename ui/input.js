@@ -255,6 +255,85 @@ class FlagField {
     }
 }
 
+class PerkField {
+    constructor(perks) {
+        this.root = document.createElement('div');
+        this.root.className = 'px-3 py-2';
+
+        perks.forEach(p => {
+            const container = document.createElement('div');
+            container.className = 'py-3';
+
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'form-check form-switch';
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.role = 'switch';
+            input.className = 'form-check-input';
+            input.id = 'editField-perk-' + p.storageName;
+            input.value = p.storageName;
+
+            const perkName = document.createElement('label');
+            perkName.innerText = p.storageName;
+            perkName.className = 'form-check-label h5';
+            perkName.htmlFor = input.id;
+
+            const valuesContainer = document.createElement('div');
+            valuesContainer.className = 'py-1';
+
+            for (var i = 1; i < 5; i++) {
+                const valueContainer = document.createElement('div');
+                valueContainer.className = 'row';
+
+                const valueLabel = document.createElement('label');
+                valueLabel.className = 'col-auto col-form-label label-sm';
+                valueLabel.innerText = 'Value ' + i;
+
+                const valueInputContainer = document.createElement('div');
+                valueInputContainer.className = 'col-auto';
+                const valueInput = document.createElement('input');
+                valueInput.className = 'form-control form-control-sm';
+                valueInput.type = 'number';
+                valueInput.min = 0;
+                valueInput.id = input.id + '-value' + i;
+                valueLabel.htmlFor = valueInput.id;
+                //attachMinRequirement(valueInput);
+                valueInputContainer.appendChild(valueInput);
+
+                valueContainer.appendChild(valueLabel);
+                valueContainer.appendChild(valueInputContainer);
+
+                valuesContainer.appendChild(valueContainer)
+            }
+
+            inputContainer.appendChild(input);
+            inputContainer.appendChild(perkName);
+
+
+            const descriptionContainer = document.createElement('div');
+            const perkDescription = document.createElement('p');
+            perkDescription.textContent = p.toolTip;
+            descriptionContainer.appendChild(perkDescription);
+
+
+            container.appendChild(inputContainer);
+            container.appendChild(descriptionContainer);
+            container.appendChild(valuesContainer);
+            //container.appendChild(perkDescription);
+
+            $(valuesContainer).hide();
+            input.addEventListener('change', (e) => {
+                e.target.checked ? $(valuesContainer).show() : $(valuesContainer).hide();
+            })
+
+            this.root.appendChild(container);
+        });
+
+        return this.root;
+    }
+}
+
 // #region Min Max req
 function attachMinRequirement(field) {
     field.input.addEventListener('change', (e) => {
