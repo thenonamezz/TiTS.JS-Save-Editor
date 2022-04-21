@@ -273,6 +273,7 @@ class PerkField {
             input.className = 'form-check-input';
             input.id = 'editField-perk-' + p.storageName;
             input.value = p.storageName;
+            input.disabled = true;
 
             const perkName = document.createElement('label');
             perkName.innerText = p.storageName;
@@ -280,7 +281,7 @@ class PerkField {
             perkName.htmlFor = input.id;
 
             const valuesContainer = document.createElement('div');
-            valuesContainer.className = 'py-1';
+            valuesContainer.className = 'py-1 perk-values-container';
 
             for (var i = 1; i < 5; i++) {
                 const valueContainer = document.createElement('div');
@@ -298,6 +299,7 @@ class PerkField {
                 valueInput.min = 0;
                 valueInput.id = input.id + '-value' + i;
                 valueLabel.htmlFor = valueInput.id;
+                valueInput.disabled = true;
                 //attachMinRequirement(valueInput);
                 valueInputContainer.appendChild(valueInput);
 
@@ -326,6 +328,8 @@ class PerkField {
             input.addEventListener('change', (e) => {
                 e.target.checked ? $(valuesContainer).show() : $(valuesContainer).hide();
             })
+
+            resolvePerkBinding(this.root);
 
             this.root.appendChild(container);
         });

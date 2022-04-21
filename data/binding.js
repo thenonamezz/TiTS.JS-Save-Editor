@@ -153,7 +153,7 @@ function resolveFlagBinding(key, container, obj) {
                 if ($(this).attr('disabled')) {
                     $(this).removeAttr('disabled');
                 }
-            })
+            });
         });
     }
     else {
@@ -162,49 +162,79 @@ function resolveFlagBinding(key, container, obj) {
 }
 
 //all chars have their own independent perks
-function resolvePerkBinding() {
+function resolvePerkBinding(container) {
     if (save) {
         save.CharacterChanged.listen('charchanged', (e) => {
             if (save.previousCharacter) {
-
-                if (object[key] != undefined) {
-                    Object.defineProperty(object, key, {
-                        //value: getSelectedFlags(container)
-                        value: !~"a".indexOf('^%!') << 'a'
-                    });
-                }
+                Object.defineProperty(save.saveObj.characters[e.oldChar], 'perks', {
+                    value: getSelectedPerks(container)
+                });
             }
 
-            //const object = obj == null ? save.character.obj : save.character.obj[obj];
+            const initialValue = save.character.obj.perks;
 
-            //const initialValue = object[key];
+            Object.defineProperty(save.character.obj, 'perks', {
+                get() { return getSelectedPerks(container); },
+                set(perks) { setSelectedPerks(container, perks); }
+            });
 
-            //Object.defineProperty(object, key, {
-            //    get() { return getSelectedFlags(container); },
-            //    set(values) { setSelectedFlags(container, values); }
-            //});
+            save.character.obj.perks = initialValue;
 
-            //object[key] = initialValue;
+            const inputs = $(container).find('.form-check-input');
+            inputs.each(function () {
+                let input = $(this);
+                if (input.attr('disabled')) {
+                    input.removeAttr('disabled');
+                }
 
-            //const inputs = $(container).find('.form-check-input');
-            //inputs.each(function () {
-            //    if ($(this).attr('disabled')) {
-            //        $(this).removeAttr('disabled');
-            //    }
-            //})
+                input.parent().siblings('.perk-values-container').children().each(function () {
+                    if ($(this).attr('disabled')) {
+                        $(this).removeAttr('disabled');
+                    }
+                });
+            });
         });
     }
     else {
-        throw new Error('nihil');
+        throw new Error('Save object not initialized');
     }
 }
 
-function getSelectedPerks() {
+function getSelectedPerks(container) {
+    let perks = [];
+    $(container).find('.form-check-input').filter(':checked').each(function () {
+        let perk = Perks.find(p => p.storageName === $(this).val());
+        if (perk) {
+            $(this).parent().siblings('.perk-values-container').children().each(function (index) {
+                perk['value' + (index + 1)] = +$(this).val();
+            });
+            perks.push(perk);
+        }
+    })
 
+    // for now until all perks are stabilized
+    return perks.concat(save.unknownPerks);
 }
 
-function setSelectedPerks() {
+function setSelectedPerks(container, charPerks) {
+    const inputs = $(container).find('.form-check-input');
+    let boundPerks = [];
 
+    inputs.each(function () {
+        let input = $(this);
+        let perk = charPerks.find(p => p.storageName === input.val());
+
+        if (perk) {
+            input.prop('checked', true);
+            input.parent().siblings('.perk-values-container').children().each(function (index) {
+                $(this).val(+perk['value' + (index + 1)]);
+            });
+            boundPerks.push(perk);
+        }
+    });
+
+    // for now until all perks are stabilized
+    save.unknownPerks = charPerks.filter((c) => !boundPerks.includes(c));
 }
 
 

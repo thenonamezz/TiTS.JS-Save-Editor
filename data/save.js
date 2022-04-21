@@ -5,6 +5,7 @@ class Save {
         this.oldSaveObj = null;
         this.currentCharacter = null;
         this.previousCharacter = null;
+        this.unknownPerks = [];
         this.CharacterChanged = new EventHandler();
         this.SaveLoaded = new EventHandler();
 
