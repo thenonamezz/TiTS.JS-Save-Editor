@@ -174,3 +174,7 @@ input[type=number] {
 .accordion-body {
     padding: 1rem 0.5rem;
 }
+
+/*input:disabled, input:disabled ~ label, select:disabled, select:disabled ~ label, input[type=checkbox]:disabled {
+    cursor: not-allowed !important;
+}*/

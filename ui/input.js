@@ -34,41 +34,53 @@ class Field {
 }
 
 class TextField extends Field {
-    constructor(binding, label, suffixText = null, onChanged = null) {
+    constructor(obj, key, label, suffixText = null, onChanged = null, pcOnly = false) {
         super();
+        this.content.className += ' editor-text';
 
         this.input.type = 'text';
+        this.input.dataset.bind = 'value: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
+        if (pcOnly) {
+            this.input.dataset.bind += ' && $root.isPC';
+        }
+        if (onChanged) {
+            this.input.dataset.bind += ', event: { change: ' + onChanged + ' }'
+        }
 
         this.label.innerText = label;
-        this.resolveLabel(binding.key, label);
+        this.resolveLabel(key, label);
 
         if (suffixText) {
             this.resolveSuffix(suffixText);
         }
-
-        binding.valueType = ValueType.String;
-        resolveBinding(binding, this.input, onChanged);
 
         return this.content;
     }
 }
 
 class IntegerField extends Field {
-    constructor(binding, label, suffixText = null, min = null, max = null, onChanged = null) {
+    constructor(obj, key, label, suffixText = null, min = null, max = null, onChanged = null, pcOnly = false) {
         super();
+        this.content.className += ' editor-integer';
+
         this.input.type = 'number';
         this.input.step = 1;
         this.input.pattern = '\d*';
 
+        this.input.dataset.bind = 'value: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
+        if (pcOnly) {
+            this.input.dataset.bind += ' && $root.isPC';
+        }
+        if (onChanged) {
+            this.input.dataset.bind += ', event: { change: ' + onChanged + ' }'
+        }
+
         this.label.innerText = label;
-        this.resolveLabel(binding.key, label);
+        this.resolveLabel(key, label);
 
         if (suffixText) {
             this.resolveSuffix(suffixText);
         }
-
-        binding.valueType = ValueType.Integer;
-        resolveBinding(binding, this.input, onChanged);
 
         this.input.addEventListener('change', () => {
             const value = this.input.value;
@@ -82,12 +94,12 @@ class IntegerField extends Field {
             }
         });
 
-        if (!isNaN(min)) {
+        if (min !== null) {
             this.input.min = min;
             attachMinRequirement(this)
         }
 
-        if (!isNaN(max)) {
+        if (max !== null) {
             this.input.max = max;
             attachMaxRequirement(this)
         }
@@ -97,19 +109,26 @@ class IntegerField extends Field {
 }
 
 class FloatField extends Field {
-    constructor(binding, label, suffixText = null, min = null, max = null, onChanged = null) {
+    constructor(obj, key, label, suffixText = null, min = null, max = null, onChanged = null, pcOnly = false) {
         super();
+        this.content.className += ' editor-float';
+
         this.input.type = 'number';
 
+        this.input.dataset.bind = 'value: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
+        if (pcOnly) {
+            this.input.dataset.bind += ' && $root.isPC';
+        }
+        if (onChanged) {
+            this.input.dataset.bind += ', event: { change: ' + onChanged + ' }'
+        }
+
         this.label.innerText = label;
-        this.resolveLabel(binding.key, label);
+        this.resolveLabel(key, label);
 
         if (suffixText) {
             this.resolveSuffix(suffixText);
         }
-
-        binding.valueType = ValueType.Float;
-        resolveBinding(binding, this.input, onChanged);
 
         this.input.addEventListener('change', () => {
             const value = this.input.value;
@@ -122,12 +141,12 @@ class FloatField extends Field {
             }
         });
 
-        if (!isNaN(min)) {
+        if (min !== null) {
             this.input.min = min;
             attachMinRequirement(this)
         }
 
-        if (!isNaN(max)) {
+        if (max !== null) {
             this.input.max = max;
             attachMaxRequirement(this)
         }
@@ -137,58 +156,69 @@ class FloatField extends Field {
 }
 
 class SelectField extends Field {
-    constructor(items, binding, label, onChanged = null) {
+    constructor(path, obj, key, label, onChanged = null, pcOnly = false) {
         super();
+        this.content.className += ' editor-select';
+
         this.label.innerText = label;
-        this.resolveLabel(binding.key, label);
+        this.resolveLabel(key, label);
 
         this.select = document.createElement('select');
         this.select.className = 'form-select form-select-sm';
-        items.forEach(i => {
-            const option = document.createElement('option');
-            option.value = i.value;
-            option.text = i.name;
-            option.selected = false;
-            this.select.appendChild(option);
-        });
+        this.select.dataset.bind = `options: $root.getGlobal("` + path + `"),
+                                    optionsText: 'name',
+                                    optionsValue: 'value',
+                                    value: ` + obj + (obj ? '.' : '') + key + `,
+                                    enable: $root.isEnabled`;
+        if (pcOnly) {
+            this.input.dataset.bind += ' && $root.isPC';
+        }
+        if (onChanged) {
+            this.input.dataset.bind += ', event: { change: ' + onChanged + ' }'
+        }
 
         this.select.setAttribute('disabled', true);
         this.select.value = '-999';
         this.inputWrapper.replaceChild(this.select, this.input);
-
-        resolveBinding(binding, this.select, onChanged);
 
         return this.content;
     }
 }
 
 class SwitchField extends Field {
-    constructor(binding, label, onChanged = null) {
+    constructor(obj, key, label, onChanged = null, pcOnly = false) {
         super();
+        this.content.className += ' editor-switch';
+
         this.inputWrapper.className = 'form-check form-switch';
 
         this.input.type = 'checkbox';
         this.input.role = 'switch';
         this.input.className = 'form-check-input';
 
+        this.input.dataset.bind = 'checked: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
+        if (pcOnly) {
+            this.input.dataset.bind += ' && $root.isPC';
+        }
+        if (onChanged) {
+            this.input.dataset.bind += ', event: { change: ' + onChanged + ' }'
+        }
+
         this.label.innerText = label;
         this.label.className += ' form-check-label';
         this.inputWrapper.appendChild(this.label);
-
-        binding.valueType = ValueType.Boolean;
-        resolveBinding(binding, this.input, onChanged);
 
         return this.content;
     }
 }
 
 class FlagField {
-    constructor(items, binding, label, onChanged = null) {
+    constructor(path, obj, key, label, onChanged = null, pcOnly = false) {
         const expanded = true;
 
         this.content = document.createElement('div');
-        this.content.className = 'accordion text-light my-3 w-100 pt-2';
-        this.content.id = 'flagEdit-' + binding.key;
+        this.content.className = 'accordion text-light my-3 w-100 pt-2 editor-flag';
+        this.content.id = 'editFlag-' + key;
 
         this.item = document.createElement('div');
         this.item.className = 'accordion-item';
@@ -214,31 +244,34 @@ class FlagField {
 
         this.body = document.createElement('div');
         this.body.className = 'accordion-body d-flex flex-wrap';
+        this.body.dataset.bind = 'foreach: $root.getGlobal("' + path + '")';
 
-        if (items.length) {
-            items.forEach(i => {
-                const container = document.createElement('div');
-                container.className = 'form-check form-switch flag-switch-row';
-                
-                const checkBox = document.createElement('input');
-                checkBox.type = 'checkbox';
-                checkBox.role = 'switch';
-                checkBox.value = +i.value;
-                checkBox.className = 'form-check-input';
-                checkBox.setAttribute('disabled', true);
-                checkBox.id = this.content.id + '-flag-' + i.value;
+        const container = document.createElement('div');
+        container.className = 'form-check form-switch flag-switch-row';
 
-                const label = document.createElement('label');
-                label.className = 'form-check-label label-sm';
-                label.htmlFor = checkBox.id;
-                label.textContent = i.name;
-
-                container.appendChild(checkBox);
-                container.appendChild(label);
-
-                this.body.appendChild(container);
-            })
+        const checkBox = document.createElement('input');
+        checkBox.type = 'checkbox';
+        checkBox.role = 'switch';
+        checkBox.className = 'form-check-input';
+        checkBox.setAttribute('disabled', true);
+        checkBox.dataset.bind = `checked: $parent.` + obj + (obj ? '.' : '') + key + `,
+                                 checkedValue: $data.value,
+                                 enable: $root.isEnabled`;
+        if (pcOnly) {
+            checkBox.dataset.bind += ' && $root.isPC';
         }
+        if (onChanged) {
+            checkBox.dataset.bind += ', event: { change: ' + onChanged + ' }'
+        }
+
+        const chkLabel = document.createElement('label');
+        chkLabel.className = 'form-check-label label-sm';
+        chkLabel.dataset.bind = 'text: name';
+
+        container.appendChild(checkBox);
+        container.appendChild(chkLabel);
+
+        this.body.appendChild(container);
 
         this.header.appendChild(this.button);
         this.bodyContainer.appendChild(this.body);
@@ -248,8 +281,19 @@ class FlagField {
 
         this.content.appendChild(this.item);
 
-        binding.bindingType = BindingType.Flag;
-        resolveBinding(binding, this.body, onChanged);
+        return this.content;
+    }
+}
+
+class ArrayField {
+    constructor(obj, key, fields) {
+        this.content = document.createElement('div');
+        this.content.dataset.bind = 'foreach: ' + obj + (obj ? '.' : '') + key;
+        this.content.className = 'text-light my-3 w-100 editor-array';
+
+        fields.forEach(f => {
+            this.content.appendChild(f);
+        });
 
         return this.content;
     }

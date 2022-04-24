@@ -1,6 +1,9 @@
 class Tab {
-    constructor(rows) {
+    constructor(rows, context = null) {
         this.root = document.createElement('div');
+        if (context) {
+            //this.root.dataset.bind = 'with: ' + context;
+        }
 
         if (rows.length) {
             rows.forEach(r => this.root.appendChild(r));
@@ -27,8 +30,11 @@ class Row {
 }
 
 class Group {
-    constructor(titleText, fields) {
+    constructor(titleText, fields, context = null) {
         this.root = document.createElement('div');
+        if (context) {
+            //this.root.dataset.bind = 'with: ' + context;
+        }
 
         if (titleText) {
             const titleElement = document.createElement('h3');
@@ -82,9 +88,13 @@ class Group {
 }
 
 class NestedGroup {
-    constructor(titleText, fields) {
+    constructor(titleText, fields, context = null) {
         this.root = document.createElement('div');
         this.root.className = 'nested-group';
+        if (context) {
+            //this.root.dataset.bind = 'with: ' + context;
+        }
+
         if (titleText) {
             const titleElement = document.createElement('h5');
             titleElement.textContent = titleText;
@@ -97,7 +107,7 @@ class NestedGroup {
             fields.forEach(f => this.root.appendChild(f));
         }
 
-        if (!titleText) {
+        if (!titleText && fields.length) {
             this.root.children[0].className += ' mt-0';
         }
 
