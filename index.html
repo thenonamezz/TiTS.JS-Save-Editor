@@ -231,38 +231,50 @@
                 new Row([
                     new Group('Core', [
                         new NestedGroup('', [
-                            new IntegerField(char, 'Internal_aimRaw', 'Aim Raw', null, 0),
-                            new IntegerField(char, 'Internal_intelligenceRaw', 'Intelligence Raw', null, 0),
-                            new IntegerField(char, 'Internal_physiqueRaw', 'Physique Raw', null, 0),
-                            new IntegerField(char, 'Internal_reflexesRaw', 'Reflexes Raw', null, 0),
-                            new IntegerField(char, 'Internal_willpowerRaw', 'Willpower Raw', null, 0),
-                            new IntegerField(char, 'Internal_libidoRaw', 'Libido Raw', null, 0, 100),
-                            new IntegerField(char, 'Internal_taintRaw', 'Taint Raw', null, 0, 100)
+                            new FloatField(char, 'Internal_aimRaw', 'Aim Raw', null, 0),
+                            new IntegerField(char, 'aimMod', 'Aim Mod', null, 0),
                         ]),
                         new NestedGroup('', [
-                            new IntegerField(char, 'aimMod', 'Aim Mod', null, 0),
+                            new FloatField(char, 'Internal_intelligenceRaw', 'Intelligence Raw', null, 0),
                             new IntegerField(char, 'intelligenceMod', 'Intelligence Mod', null, 0),
+                        ]),
+                        new NestedGroup('', [
+                            new FloatField(char, 'Internal_physiqueRaw', 'Physique Raw', null, 0),
                             new IntegerField(char, 'physiqueMod', 'Physique Mod', null, 0),
+                        ]),
+                        new NestedGroup('', [
+                            new FloatField(char, 'Internal_reflexesRaw', 'Reflexes Raw', null, 0),
                             new IntegerField(char, 'reflexesMod', 'Reflexes Mod', null, 0),
+                        ]),
+                        new NestedGroup('', [
+                            new FloatField(char, 'Internal_willpowerRaw', 'Willpower Raw', null, 0),
                             new IntegerField(char, 'willpowerMod', 'Willpower Mod', null, 0),
+                        ]),
+                        new NestedGroup('', [
+                            new FloatField(char, 'Internal_libidoRaw', 'Libido Raw', null, 0, 100),
                             new IntegerField(char, 'libidoMod', 'Libido Mod', null, 0, 100),
+                        ]),
+                        new NestedGroup('', [
+                            new FloatField(char, 'Internal_taintRaw', 'Taint Raw', null, 0, 100),
                             new IntegerField(char, 'taintMod', 'Taint Mod', null, 0, 100)
                         ])
                     ]),
                     new Group('Combat', [
                         new NestedGroup('', [
                             new IntegerField(char, 'HPRaw', 'HP Raw', null, 0),
-                            new IntegerField(char, 'energyRaw', 'Energy Raw', null, 0),
-                            new IntegerField(char, 'lustRaw', 'Lust Raw', null, 0),
-                            new IntegerField(char, 'shieldsRaw', 'Shields Raw', null, 0)
+                            new IntegerField(char, 'HPMod', 'HP Mod', null, 0)
                         ]),
                         new NestedGroup('', [
-                            new IntegerField(char, 'HPMod', 'HP Mod', null, 0),
-                            new IntegerField(char, 'energyMod', 'Energy Mod', null, 0),
+                            new IntegerField(char, 'energyRaw', 'Energy Raw', null, 0),
+                            new IntegerField(char, 'energyMod', 'Energy Mod', null, 0)
+                        ]),
+                        new NestedGroup('', [
+                            new IntegerField(char, 'lustRaw', 'Lust Raw', null, 0, 100),
                             new IntegerField(char, 'lustMod', 'Lust Mod', null, 0)
-                        ])
+                        ]),
+                        new IntegerField(char, 'shieldsRaw', 'Shields Raw', null, 0)
                     ]),
-                ])
+                ]),
             ]));
             // #endregion
 
@@ -324,13 +336,15 @@
                         new SelectField('GenitalSpot', char, 'genitalSpot', 'Genital Spot'),
                         new NestedGroup('', [
                             new IntegerField(char, 'hipRatingRaw', 'Hip Rating Raw', null, 0),
-                            new IntegerField(char, 'buttRatingRaw', 'Butt Rating Raw', null, 0),
-                            new IntegerField(char, 'bellyRatingRaw', 'Belly Rating Raw', null, 0),
+                            new IntegerField(char, 'hipRatingMod', 'Hip Rating Mod', null, 0),
                         ]),
                         new NestedGroup('', [
-                            new IntegerField(char, 'hipRatingMod', 'Hip Rating Mod', null, 0),
-                            new IntegerField(char, 'buttRatingMod', 'Butt Rating Mod', null, 0),
-                            new IntegerField(char, 'bellyRatingMod', 'Belly Rating Mod', null, 0),
+                            new IntegerField(char, 'buttRatingRaw', 'Butt Rating Raw', null, 0),
+                            new IntegerField(char, 'buttRatingMod', 'Butt Rating Mod', null, 0)
+                        ]),
+                        new NestedGroup('', [
+                            new IntegerField(char, 'bellyRatingRaw', 'Belly Rating Raw', null, 0),
+                            new IntegerField(char, 'bellyRatingMod', 'Belly Rating Mod', null, 0)
                         ])
                     ]),
                     new Group('Skin', [
@@ -367,10 +381,10 @@
                         //new FlagField(globalKeys.ValidFlags.Ass, new Binding('flags', 'ass'), 'Ass Flags'),
                         new NestedGroup('', [
                             new IntegerField(butt, 'loosenessRaw', 'Looseness Raw', null, 0),
-                            new IntegerField(butt, 'wetnessRaw', 'Wetness Raw', null, 0)
+                            new IntegerField(butt, 'loosenessMod', 'Looseness Mod', null, 0)
                         ]),
                         new NestedGroup('', [
-                            new IntegerField(butt, 'loosenessMod', 'Looseness Mod', null, 0),
+                            new IntegerField(butt, 'wetnessRaw', 'Wetness Raw', null, 0),
                             new IntegerField(butt, 'wetnessMod', 'Wetness Mod', null, 0)
                         ])
                     ]),
@@ -404,14 +418,14 @@
                         new IntegerField(char, 'dickNippleMultiplier', 'Dick Nipple Multiplier', null, 0)
                     ]),
                     new Group('Breasts', [
-                        new ArrayField(char, 'breastRows()', [
+                        new ArrayField(char, 'breastRows()', 'getBreastName', [
                             new IntegerField('', 'breasts', 'Count', null, 0),
                             new IntegerField('', 'breastRatingRaw', 'Rating Raw', null, 0),
                             new IntegerField('', 'breastRatingMod', 'Rating Mod', null, 0),
                             new IntegerField('', 'breastRatingLactationMod', 'Lactation Mod', null, 0),
                             new IntegerField('', 'breastRatingHoneypotMod', 'Honeypot Mod', null, 0),
                             new SelectField('NippleType', '', 'nippleType', 'Nipple Type'),
-                            new IntegerField('', 'fullness', 'Fullness', null, 0),
+                            new FloatField('', 'fullness', 'Fullness', null, 0),
                             new FlagField('areola', '', 'areolaFlags', 'Areola Flags')
                         ])
                         //todo figure out breasts
@@ -421,49 +435,83 @@
             // #endregion
 
             // #region Crotch
-            var pDisclaimerForNowOk = document.createElement('div');
-            var pDisclaimerForNowOkP = document.createElement('span')
-            pDisclaimerForNowOkP.textContent = 'This looks like shit atm but im tired, this is index ';
-            var pDisclaimerForNowOkS = document.createElement('span');
-            pDisclaimerForNowOkS.dataset.bind = 'text: $index';
-            pDisclaimerForNowOk.appendChild(pDisclaimerForNowOkP);
-            pDisclaimerForNowOk.appendChild(pDisclaimerForNowOkS);
-            pDisclaimerForNowOk.style.marginTop = '100px';
-
             $('#tabCrotch').append(new Tab([
                 // todo multiple array thingy
                 new Row([
-                    new Group('Male', [
-                        new NestedGroup('General', [
-
+                    new Group('Male Organs', [
+                        new IntegerField(char, 'balls', 'Balls', null, 0),
+                        new NestedGroup('', [
+                            new FloatField(char, 'ballSizeRaw', 'Ball Size Raw', null, 0),
+                            new IntegerField(char, 'ballSizeMod', 'Ball Size Mod', null, 0)
                         ]),
-                        new NestedGroup('Penis', [
-                            new ArrayField(char, 'cocks()', [
-                                pDisclaimerForNowOk,
-                                new SelectField('BodyType', '', 'cType', 'Type'),
-                                new TextField('', 'cockColor', 'Color'),
-                                new NestedGroup('', [
-                                    new FloatField('', 'cLengthRaw', 'Length Raw', null, 0),
-                                    new FloatField('', 'cThicknessRatioRaw', 'Thiccness Ratio Raw', null, 0)
-                                ]),
-                                new NestedGroup('', [
-                                    new FloatField('', 'cLengthMod', 'Length Mod', null, 0),
-                                    new FloatField('', 'cThicknessRatioMod', 'Thiccness Ratio Mod', null, 0)
-                                ]),
-                                new FloatField('', 'knotMultiplier', 'Knot Multiplier', null, 0),
-                                new FloatField('', 'flaccidMultiplier', 'Flaccid Multiplier', null, 0),
-                                new FlagField('BodyFlag', '', 'flags', 'Penis Flags')
-                            ])
-                        ])
+                        new FloatField(char, 'ballFullness', 'Ball Fullness', null, 0, 100),
+                        new FloatField(char, 'ballEfficiency', 'Ball Efficiency', null, 0),
+                        new FloatField(char, 'refractoryRate', 'Refractory Rate', null, 0),
+                        new SelectField('FluidType', char, 'cumType', 'Cum Type'),
+                        new NestedGroup('', [
+                            new FloatField(char, 'cumMultiplierRaw', 'Cum Multiplier Raw', null, 0),
+                            new IntegerField(char, 'cumMultiplierMod', 'Cum Multiplier Raw', null, 0)
+                        ]),
+                        new NestedGroup('', [
+                            new FloatField(char, 'cumQualityRaw', 'Cum Quality Raw', null, 0),
+                            new IntegerField(char, 'cumQualityMod', 'Cum Quality Mod', null, 0)
+                        ]),
+                        new SwitchField(char, 'cockVirgin', 'Cock Virgin')
                     ]),
+                    new Group('Penises', [
+                        new ArrayField(char, 'cocks()', 'getPenisName', [
+                            new NestedGroup('', [
+                                new FloatField('', 'cLengthRaw', 'Length Raw', null, 0),
+                                new FloatField('', 'cLengthMod', 'Length Mod', null, 0),
+                            ]),
+                            new NestedGroup('', [
+                                new FloatField('', 'cThicknessRatioRaw', 'Thickness Ratio Raw', null, 0),
+                                new FloatField('', 'cThicknessRatioMod', 'Thickness Ratio Mod', null, 0),
+                            ]),
+                            new SelectField('BodyType', '', 'cType', 'Type'),
+                            new TextField('', 'cockColor', 'Color'),
+                            new FloatField('', 'knotMultiplier', 'Knot Multiplier', null, 0),
+                            new FloatField('', 'flaccidMultiplier', 'Flaccid Multiplier', null, 0),
+                            new SwitchField('', 'virgin', 'Virgin'),
+                            new FlagField('BodyFlag', '', 'flags', 'Flags') //todo flags
+                            //todo piercing
+                        ])
+                    ])
                 ]),
                 new Row([
-                    new Group('Female', [
-                        new NestedGroup('General', [
-
+                    new Group('Female Organs', [
+                        new NestedGroup('', [
+                            new FloatField(char, 'fertilityRaw', 'Fertility Raw', null, 0),
+                            new IntegerField(char, 'fertilityMod', 'Fertility Mod', null, 0)
                         ]),
-                        new NestedGroup('Vagina', [
-
+                        new SelectField('FluidType', char, 'girlCumType', 'Cum Type'),
+                        new NestedGroup('', [
+                            new FloatField(char, 'girlCumMultiplierRaw', 'Cum Multiplier Raw', null, 0),
+                            new IntegerField(char, 'girlCumMultiplierMod', 'Cum Multiplier Mod', null, 0)
+                        ]),
+                        new FloatField(char, 'clitLength', 'Clit Length', null, 0),
+                        new SwitchField(char, 'vaginalVirgin', 'Vaginal Virgin')
+                    ]),
+                    new Group('Vaginas', [
+                        new ArrayField(char, 'vaginas()', 'getVaginaName', [
+                            new IntegerField('', 'minLooseness', 'Min Looseness', null, 0),
+                            new NestedGroup('', [
+                                new IntegerField('', 'loosenessRaw', 'Looseness Raw', null, 0),
+                                new IntegerField('', 'loosenessMod', 'Looseness Mod', null, 0)
+                            ]),
+                            new NestedGroup('', [
+                                new IntegerField('', 'wetnessRaw', 'Wetness Raw', null, 0),
+                                new IntegerField('', 'wetnessMod', 'Wetness Mod', null, 0)
+                            ]),
+                            new IntegerField('', 'bonusCapacity', 'Bonus Capacity', null, 0),
+                            new SelectField('BodyType', '', 'type', 'Type'),
+                            new TextField('', 'vaginaColor', 'Color'),
+                            new IntegerField('', 'clits', 'Clits', null, 1),
+                            new FloatField('', 'fullness', 'Fullness', null, 0),
+                            new IntegerField('', 'shrinkCounter', 'Shrink Counter', null, 0),
+                            new SwitchField('', 'hymen', 'Hymen'),
+                            new FlagField('BodyFlag', '', 'flags', 'Flags') //todo flags
+                            //todo piercing
                         ])
                     ]),
                 ])
@@ -472,8 +520,8 @@
 
             // #region
             $('#tabPerks').append(
-                //document.createElement('h2').innerText = 'Values and multichar not working for this yet').append(
-                //    new PerkField(Perks)
+                document.createElement('p').textContent = 'Needs serious ui work but works behind the scenes (fyi if you use this in its current state some perks will disappear after removed)',
+                new PerkField(char, 'perks')
             );
             // #endregion
 

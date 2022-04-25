@@ -1,7 +1,7 @@
 class Field {
     constructor() {
         this.content = document.createElement('div');
-        this.content.className = 'text-light my-3 w-100';
+        this.content.className = 'text-light my-3';
 
         this.label = document.createElement('label');
         this.label.className = 'label-sm';
@@ -18,10 +18,10 @@ class Field {
     }
 
     resolveLabel(key, label) {
-        this.input.id = 'editField-' + key;
+        //this.input.id = 'editField-' + key;
         this.select && (this.select.id = 'editField-' + key);
         this.label.innerText = label;
-        this.label.htmlFor = this.input.id;
+        //this.label.htmlFor = this.input.id;
     }
 
     resolveSuffix(text) {
@@ -39,7 +39,7 @@ class TextField extends Field {
         this.content.className += ' editor-text';
 
         this.input.type = 'text';
-        this.input.dataset.bind = 'value: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
+        this.input.dataset.bind = 'textInput: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
         if (pcOnly) {
             this.input.dataset.bind += ' && $root.isPC';
         }
@@ -66,42 +66,25 @@ class IntegerField extends Field {
         this.input.type = 'number';
         this.input.step = 1;
         this.input.pattern = '\d*';
+        if (!isNaN(parseFloat(min))) {
+            this.input.min = min;
+        }
+        if (!isNaN(parseFloat(max))) {
+            this.input.max = max;
+        }
 
-        this.input.dataset.bind = 'value: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
+        this.input.dataset.bind = 'textInput: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
         if (pcOnly) {
             this.input.dataset.bind += ' && $root.isPC';
         }
-        if (onChanged) {
-            this.input.dataset.bind += ', event: { change: ' + onChanged + ' }'
-        }
+
+        this.input.dataset.bind += ', event: { change: $root.' + (onChanged ? onChanged : 'validateNumberInput') + ' }';
 
         this.label.innerText = label;
         this.resolveLabel(key, label);
 
         if (suffixText) {
             this.resolveSuffix(suffixText);
-        }
-
-        this.input.addEventListener('change', () => {
-            const value = this.input.value;
-            if (value.includes('.')) {
-                this.input.value = -1;
-                return;
-            }
-
-            if (value.startsWith('0') && value.length > 1) {
-                this.input.value = +value;
-            }
-        });
-
-        if (min !== null) {
-            this.input.min = min;
-            attachMinRequirement(this)
-        }
-
-        if (max !== null) {
-            this.input.max = max;
-            attachMaxRequirement(this)
         }
 
         return this.content;
@@ -114,41 +97,26 @@ class FloatField extends Field {
         this.content.className += ' editor-float';
 
         this.input.type = 'number';
+        this.input.step = 'any';
+        if (!isNaN(parseFloat(min))) {
+            this.input.min = min;
+        }
+        if (!isNaN(parseFloat(max))) {
+            this.input.max = max;
+        }
 
-        this.input.dataset.bind = 'value: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
+        this.input.dataset.bind = 'textInput: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
         if (pcOnly) {
             this.input.dataset.bind += ' && $root.isPC';
         }
-        if (onChanged) {
-            this.input.dataset.bind += ', event: { change: ' + onChanged + ' }'
-        }
+
+        this.input.dataset.bind += ', event: { change: $root.' + (onChanged ? onChanged : 'validateNumberInput') + ' }';
 
         this.label.innerText = label;
         this.resolveLabel(key, label);
 
         if (suffixText) {
             this.resolveSuffix(suffixText);
-        }
-
-        this.input.addEventListener('change', () => {
-            const value = this.input.value;
-            if (value.startsWith('.')) {
-                this.input.value = 0 + value;
-            }
-
-            if (value.startsWith('0') && value.length > 1) {
-                this.input.value = +value;
-            }
-        });
-
-        if (min !== null) {
-            this.input.min = min;
-            attachMinRequirement(this)
-        }
-
-        if (max !== null) {
-            this.input.max = max;
-            attachMaxRequirement(this)
         }
 
         return this.content;
@@ -286,126 +254,111 @@ class FlagField {
 }
 
 class ArrayField {
-    constructor(obj, key, fields) {
+    constructor(obj, key, nameFunc, fields) {
+        const keyDisplayText = key.replace('(', '').replace(')', '');
+
         this.content = document.createElement('div');
+        this.content.id = keyDisplayText + '-accordion'
         this.content.dataset.bind = 'foreach: ' + obj + (obj ? '.' : '') + key;
         this.content.className = 'text-light my-3 w-100 editor-array';
 
+        this.item = document.createElement('div');
+        this.item.className = 'accordion-item';
+        this.header = document.createElement('h6');
+        this.header.className = 'accordion-header';
+
+        this.button = document.createElement('button');
+        this.button.type = 'button';
+        this.button.setAttribute('data-bs-toggle', 'collapse');
+        this.button.setAttribute('aria-expanded', false);
+        this.button.dataset.bind = `text: $root.` + nameFunc + `($index),
+                                    class: 'accordion-button' + ($index() === 0 ? '' : ' collapsed'),
+                                    attr: { 'data-bs-target': '#accordion-body-` + keyDisplayText + `-' + $index() }`;
+
+        this.bodyContainer = document.createElement('div');
+        this.bodyContainer.setAttribute('data-bs-parent', '#' + keyDisplayText + '-accordion');
+        this.bodyContainer.dataset.bind = `attr: { id: 'accordion-body-` + keyDisplayText + `-' + $index() },
+                                           class: 'accordion-collapse collapse' + ($index() === 0 ? ' show' : '')`;
+
+        this.body = document.createElement('div');
+        this.body.className = 'accordion-body';
+
+        fields[0].className += ' mt-0';
+
         fields.forEach(f => {
-            this.content.appendChild(f);
+            this.body.appendChild(f);
         });
+
+        this.header.appendChild(this.button);
+        this.bodyContainer.appendChild(this.body);
+
+        this.item.appendChild(this.header);
+        this.item.appendChild(this.bodyContainer);
+
+        this.content.appendChild(this.item);
 
         return this.content;
     }
 }
 
 class PerkField {
-    constructor(perks) {
-        this.root = document.createElement('div');
-        this.root.className = 'px-3 py-2';
+    constructor(obj, key) {
+        this.content = document.createElement('div');
+        this.content.className = 'text-light my-3 w-100 editor-perk';
+        this.content.dataset.bind = 'foreach: $root.getPerks()';
 
-        perks.forEach(p => {
-            const container = document.createElement('div');
-            container.className = 'py-3';
+        const container = document.createElement('div');
+        container.className = 'form-check form-switch mt-5';
 
-            const inputContainer = document.createElement('div');
-            inputContainer.className = 'form-check form-switch';
+        const checkBox = document.createElement('input');
+        checkBox.type = 'checkbox';
+        checkBox.role = 'switch';
+        checkBox.className = 'form-check-input';
+        checkBox.setAttribute('disabled', true);
+        checkBox.dataset.bind = `checked: $root.` + obj + (obj ? '.' : '') + key + `,
+                                 checkedValue: $data,
+                                 enable: $root.isEnabled`;
+        //if (onChanged) {
+        //    checkBox.dataset.bind += ', event: { change: ' + onChanged + ' }'
+        //}
 
-            const input = document.createElement('input');
-            input.type = 'checkbox';
-            input.role = 'switch';
-            input.className = 'form-check-input';
-            input.id = 'editField-perk-' + p.storageName;
-            input.value = p.storageName;
-            input.disabled = true;
+        const chkLabel = document.createElement('label');
+        chkLabel.className = 'form-check-label label-sm';
+        chkLabel.dataset.bind = 'text: storageName';
 
-            const perkName = document.createElement('label');
-            perkName.innerText = p.storageName;
-            perkName.className = 'form-check-label h5';
-            perkName.htmlFor = input.id;
+        const perkDescription = document.createElement('p');
+        perkDescription.dataset.bind = 'text: $data.toolTip';
 
-            const valuesContainer = document.createElement('div');
-            valuesContainer.className = 'py-1 perk-values-container';
+        const valueContainer = document.createElement('div');
+        valueContainer.dataset.bind = 'visible: $root.hasPerk($data)';
+        for (var i = 1; i < 5; i++) {
+            var div = document.createElement('div');
 
-            for (var i = 1; i < 5; i++) {
-                const valueContainer = document.createElement('div');
-                valueContainer.className = 'row';
+            var label = document.createElement('label');
+            label.className = 'label-sm';
+            label.textContent = 'Value ' + i;
 
-                const valueLabel = document.createElement('label');
-                valueLabel.className = 'col-auto col-form-label label-sm';
-                valueLabel.innerText = 'Value ' + i;
+            var inputWrapper = document.createElement('div');
+            inputWrapper.className = 'input-group input-group-sm';
+            var input = document.createElement('input');
+            input.className = 'form-control form-control-sm';
+            input.setAttribute('disabled', true);
+            input.dataset.bind = 'value: $data.value' + i + ' , enable: $root.isEnabled';
+            inputWrapper.appendChild(input);
 
-                const valueInputContainer = document.createElement('div');
-                valueInputContainer.className = 'col-auto';
-                const valueInput = document.createElement('input');
-                valueInput.className = 'form-control form-control-sm';
-                valueInput.type = 'number';
-                valueInput.min = 0;
-                valueInput.id = input.id + '-value' + i;
-                valueLabel.htmlFor = valueInput.id;
-                valueInput.disabled = true;
-                //attachMinRequirement(valueInput);
-                valueInputContainer.appendChild(valueInput);
+            div.appendChild(label);
+            div.appendChild(inputWrapper);
 
-                valueContainer.appendChild(valueLabel);
-                valueContainer.appendChild(valueInputContainer);
+            valueContainer.appendChild(div);
+        }
 
-                valuesContainer.appendChild(valueContainer)
-            }
+        container.appendChild(checkBox);
+        container.appendChild(chkLabel);
 
-            inputContainer.appendChild(input);
-            inputContainer.appendChild(perkName);
+        this.content.appendChild(container);
+        this.content.appendChild(perkDescription);
+        this.content.appendChild(valueContainer);
 
-
-            const descriptionContainer = document.createElement('div');
-            const perkDescription = document.createElement('p');
-            perkDescription.textContent = p.toolTip;
-            descriptionContainer.appendChild(perkDescription);
-
-
-            container.appendChild(inputContainer);
-            container.appendChild(descriptionContainer);
-            container.appendChild(valuesContainer);
-            //container.appendChild(perkDescription);
-
-            $(valuesContainer).hide();
-            input.addEventListener('change', (e) => {
-                e.target.checked ? $(valuesContainer).show() : $(valuesContainer).hide();
-            })
-
-            resolvePerkBinding(this.root);
-
-            this.root.appendChild(container);
-        });
-
-        return this.root;
+        return this.content;
     }
 }
-
-// #region Min Max req
-function attachMinRequirement(field) {
-    field.input.addEventListener('change', (e) => {
-        const min = Number(field.input.min);
-        var newValue = +e.target.value;
-        if (isNaN(newValue)) { newValue = min - 1; }
-        if (newValue < min) {
-            alert('Value cannot be less than ' + min);
-            field.input.invalid = true;
-            field.input.value = min;
-        }
-    });
-}
-
-function attachMaxRequirement(field) {
-    field.input.addEventListener('change', (e) => {
-        const max = Number(field.input.max);
-        var newValue = +e.target.value;
-        if (isNaN(newValue)) { newValue = max + 1; }
-        if (newValue > max) {
-            alert('Value cannot be more than ' + max);
-            field.input.invalid = true;
-            field.input.value = max;
-        }
-    });
-}
-// #endregion

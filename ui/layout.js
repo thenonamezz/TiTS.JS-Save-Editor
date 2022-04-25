@@ -44,42 +44,16 @@ class Group {
             this.root.appendChild(hr);
         }
 
-        //const isNested = fields.every(f => f.className.includes('nested-group'));
-        //if (isNested) {
-        //    if (fields.length) {
-        //        const nestedContainer = document.createElement('div');
-        //        nestedContainer.className = 'row g-0';
-        //        fields.forEach(f => {
-        //            f.className += ' col-sm-' + 12 / fields.length + ' px-1';
-        //            nestedContainer.appendChild(f);
-        //        });
-        //        this.root.appendChild(nestedContainer);
-        //    }
-        //}
-        //else {
-        //    if (fields.length) {
-        //        fields.forEach(f => this.root.appendChild(f));
-        //    }
-        //}
-
         if (fields.length) {
             fields.forEach(f => {
                 if (f.className.includes('nested-group')) {
-                    const nestedGroups = fields.filter(f => f.className.includes('nested-group'));
-
-                    const nestedContainer = document.createElement('div');
-                    nestedContainer.className = 'row g-0';
-
-                    nestedGroups.forEach(ng => {
-                        ng.className += ' col-' + 12 / nestedGroups.length + ' px-1';
-                        nestedContainer.appendChild(ng);
-                    })
-
-                    this.root.appendChild(nestedContainer);
+                    //if (fields.indexOf(f) == fields.length - 1 || !fields[fields.indexOf(f) + 1].className.includes('nested-group')) {
+                    //    for (var i = 0; i < f.children.length; i++) {
+                    //        f.children[i].className += ' mb-0';
+                    //    }
+                    //}
                 }
-                else {
-                    this.root.appendChild(f);
-                }
+                this.root.appendChild(f);
             });
         }
 
@@ -90,7 +64,8 @@ class Group {
 class NestedGroup {
     constructor(titleText, fields, context = null) {
         this.root = document.createElement('div');
-        this.root.className = 'nested-group';
+        this.root.className = 'row g-0 nested-group my-n3';
+
         if (context) {
             //this.root.dataset.bind = 'with: ' + context;
         }
@@ -104,12 +79,15 @@ class NestedGroup {
         }
 
         if (fields.length) {
-            fields.forEach(f => this.root.appendChild(f));
+            fields.forEach(f => {
+                f.className += ' col-6 px-1';
+                this.root.appendChild(f);
+            });
         }
 
-        if (!titleText && fields.length) {
-            this.root.children[0].className += ' mt-0';
-        }
+        //if (!titleText && fields.length) {
+        //    this.root.children[0].className += ' mt-0';
+        //}
 
         return this.root;
     }
