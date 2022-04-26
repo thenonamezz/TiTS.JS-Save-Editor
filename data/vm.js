@@ -28,41 +28,38 @@ var ViewModel = function (data) {
     };
 
     //self.getPerks = ko.computed(function () {
-    self.getPerks = function () {
+    self.internal_perks = ko.computed(function () {
         if (self.selectedCharacter()) {
             // even though the objects look the same, due to reference the char perks dont get counted as "owned" by the character,
             // this fixes that AND adds any perks that are not present/stored internally in the editor data
 
-            let perks = null;
-            //let perksInternal = self.perksInternal;
-            let perksInternal = ko.mapping.fromJS(Perks); // reference eats perks
-            let perksChar = self.selectedCharacter().obj.perks;
+            let dPerks = ko.observableArray(self.perksFromData());
+            let cPerks = self.selectedCharacter().obj.perks;
 
-            for (var i = 0; i < perksChar().length; i++) {
-                perksInternal.remove(function (perk) {
-                    return perk.storageName() === perksChar()[i].storageName();
+            for (var i = 0; i < cPerks().length; i++) {
+                dPerks.remove(function (perk) {
+                    return perk.storageName() === cPerks()[i].storageName();
                 });
             }
 
-            perks = ko.observableArray(perksChar().concat(perksInternal())).sorted(function (l, r) {
+            self.perksFromData = ko.observableArray(ko.observableArray(cPerks().concat(dPerks())).sorted(function (l, r) {
                 return l.storageName() === r.storageName() ? 0
                     : l.storageName() < r.storageName() ? -1
-                    : 1;
-            });
+                        : 1;
+            }));
 
             //self.unknownPerks(perksChar().filter(p => !perksInternal().includes(p)));
 
-            return perks;
+            //return perks;
+            return self.perksFromData;
         }
-    }
+    }, self);
 
     self.hasPerk = function (data) {
         return self.selectedCharacter().obj.perks().includes(data);
     }
 
-    //self.unknownPerks = ko.observableArray();
-
-    //self.perksInternal = ko.mapping.fromJS(Perks);
+    self.perksFromData = ko.mapping.fromJS(Perks);
 
     self.isEnabled = ko.observable(false);
 
@@ -138,7 +135,10 @@ var ViewModel = function (data) {
     }
 
     self.getBreastName = function (index) {
-        return 'A';
+        const i = self.selectedCharacter().obj.breastRows()[index()];
+        const count = +i.breasts();
+        const rating = +i.breastRatingRaw() + +i.breastRatingMod();
+        return count + ' ' + getCupSize(rating) + ' breast' + (count > 1 ? 's' : '');
     }
 }
 
@@ -160,3 +160,25 @@ class StorageClass {
         this.version = 1;
     }
 }
+
+// custom handler to write actual numbers and not strings when needed
+ko.bindingHandlers.numberInput = {
+    init: function (element, valueAccessor, allBindingsAccessor) {
+        var underlyingObservable = valueAccessor();
+
+        var interceptor = ko.pureComputed({
+            read: underlyingObservable,
+            write: function (value) {
+                underlyingObservable(+value);
+            },
+            owner: this
+        });
+
+        ko.bindingHandlers.textInput.init(element, function () {
+            return interceptor
+        }, allBindingsAccessor);
+    },
+    update: function (element, valueAccessor, allBindingsAccessor) {
+        element.value = valueAccessor()();
+    }
+};

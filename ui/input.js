@@ -73,7 +73,7 @@ class IntegerField extends Field {
             this.input.max = max;
         }
 
-        this.input.dataset.bind = 'textInput: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
+        this.input.dataset.bind = 'numberInput: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
         if (pcOnly) {
             this.input.dataset.bind += ' && $root.isPC';
         }
@@ -105,7 +105,7 @@ class FloatField extends Field {
             this.input.max = max;
         }
 
-        this.input.dataset.bind = 'textInput: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
+        this.input.dataset.bind = 'numberInput: ' + obj + (obj ? '.' : '') + key + ', enable: $root.isEnabled';
         if (pcOnly) {
             this.input.dataset.bind += ' && $root.isPC';
         }
@@ -305,7 +305,7 @@ class PerkField {
     constructor(obj, key) {
         this.content = document.createElement('div');
         this.content.className = 'text-light my-3 w-100 editor-perk';
-        this.content.dataset.bind = 'foreach: $root.getPerks()';
+        this.content.dataset.bind = 'foreach: $root.internal_perks()';
 
         const container = document.createElement('div');
         container.className = 'form-check form-switch mt-5';
@@ -313,7 +313,7 @@ class PerkField {
         const checkBox = document.createElement('input');
         checkBox.type = 'checkbox';
         checkBox.role = 'switch';
-        checkBox.className = 'form-check-input';
+        checkBox.className = 'form-check-input perk-switch';
         checkBox.setAttribute('disabled', true);
         checkBox.dataset.bind = `checked: $root.` + obj + (obj ? '.' : '') + key + `,
                                  checkedValue: $data,
@@ -323,11 +323,11 @@ class PerkField {
         //}
 
         const chkLabel = document.createElement('label');
-        chkLabel.className = 'form-check-label label-sm';
+        chkLabel.className = 'form-check-label';
         chkLabel.dataset.bind = 'text: storageName';
 
         const perkDescription = document.createElement('p');
-        perkDescription.dataset.bind = 'text: $data.toolTip';
+        perkDescription.dataset.bind = "text: $data.toolTip, class: $root.hasPerk($data) ? '' : 'text-muted' ";
 
         const valueContainer = document.createElement('div');
         valueContainer.dataset.bind = 'visible: $root.hasPerk($data)';

@@ -9,11 +9,11 @@
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/knockout@3.5.1/build/output/knockout-latest.min.js"></script>
     <script type="text/javascript" src="https://kit.fontawesome.com/f5341e91eb.js"></script>
     <script type="text/javascript" src="scripts/filesaver.js"></script>
     <script type="text/javascript" src="scripts/ko.js"></script>
     <script type="text/javascript" src="scripts/ko-mapping.js"></script>
+    <script type="text/javascript" src="scripts/util.js"></script>
     <!--<script type="text/javascript" src="scripts/util.js"></script>-->
     <script type="text/javascript" src="ui/input.js"></script>
     <script type="text/javascript" src="ui/layout.js"></script>
@@ -169,7 +169,13 @@
             });
 
             $('#saveFile').on('click', () => {
-                const blob = new Blob([ko.toJSON(vm)], { type: 'text/json' });
+                var mapping = {
+                    'ignore': ["selectedCharacter", "chars", "isPC", "getGlobal", "internal_perks", "hasPerk", "perksFromData",
+                        "isEnabled", "nameChanged", "validateNumberInput", "emailChanged", "getPenisName", "getVaginaName", "getBreastName"]
+                }
+
+                //const blob = new Blob([ko.toJSON(vm, mapping)], { type: 'text/json' });
+                const blob = new Blob([ko.mapping.toJSON(vm, mapping)], { type: 'text/json' });
                 var fileName = $('#saveName').val();
                 if (!fileName) {
                     fileName = "unnamed" + fileExtension;
