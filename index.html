@@ -187,6 +187,7 @@
             // #region UI
             const instance = 'gameInstanceInfo';
             const char = 'selectedCharacter().obj';
+            const pc = 'characters.PC';
             const butt = char + '.ass';
             const flags = 'flags';
 
@@ -224,8 +225,10 @@
                     ]),
                     new Group('Advancement', [
                         new IntegerField(char, 'level', 'Level', null, 0, 10),
-                        new IntegerField(char, 'XPRaw', 'XP', null, 0, null, null, true),
-                        new IntegerField(char, 'unspentStatPoints', 'Stat Points', null, 0, null, null, true)
+                        //new IntegerField(char, 'XPRaw', 'XP', null, 0, null, null, true),
+                        new IntegerField(pc, 'XPRaw', 'XP', null, 0, null, null, true),
+                        //new IntegerField(char, 'unspentStatPoints', 'Stat Points', null, 0, null, null, true)
+                        new IntegerField(pc, 'unspentStatPoints', 'Stat Points', null, 0, null, null, true)
                     ]),
                     new Group('Appearance', [
                         new IntegerField(char, 'tallness', 'Height', 'inches', 0),
@@ -424,7 +427,7 @@
                         new IntegerField(char, 'dickNippleMultiplier', 'Dick Nipple Multiplier', null, 0)
                     ]),
                     new Group('Breasts', [
-                        new ArrayField(char, 'breastRows()', 'getBreastName', [
+                        new ArrayField(char, 'breastRows()', 'getBreastName', 'addBreastRow', [
                             new IntegerField('', 'breasts', 'Count', null, 0),
                             new IntegerField('', 'breastRatingRaw', 'Rating Raw', null, 0),
                             new IntegerField('', 'breastRatingMod', 'Rating Mod', null, 0),
@@ -465,7 +468,7 @@
                         new SwitchField(char, 'cockVirgin', 'Cock Virgin')
                     ]),
                     new Group('Penises', [
-                        new ArrayField(char, 'cocks()', 'getPenisName', [
+                        new ArrayField(char, 'cocks()', 'getPenisName', 'addPenis', [
                             new NestedGroup('', [
                                 new FloatField('', 'cLengthRaw', 'Length Raw', null, 0),
                                 new FloatField('', 'cLengthMod', 'Length Mod', null, 0),
@@ -499,7 +502,7 @@
                         new SwitchField(char, 'vaginalVirgin', 'Vaginal Virgin')
                     ]),
                     new Group('Vaginas', [
-                        new ArrayField(char, 'vaginas()', 'getVaginaName', [
+                        new ArrayField(char, 'vaginas()', 'getVaginaName', 'addVagina', [
                             new IntegerField('', 'minLooseness', 'Min Looseness', null, 0),
                             new NestedGroup('', [
                                 new IntegerField('', 'loosenessRaw', 'Looseness Raw', null, 0),

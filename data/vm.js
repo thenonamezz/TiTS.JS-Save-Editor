@@ -127,6 +127,11 @@ var ViewModel = function (data) {
         return 'a ' + color + ' ' + len + '" ' + type + ' penis';
     }
 
+    self.addPenis = function () {
+        const p = new Cock();
+        self.selectedCharacter().obj.cocks.push(ko.mapping.fromJS(p));
+    }
+
     self.getVaginaName = function (index) {
         const i = self.selectedCharacter().obj.vaginas()[index()];
         const color = i.vaginaColor();
@@ -134,11 +139,19 @@ var ViewModel = function (data) {
         return 'a ' + color + ' ' + type + ' vagina';
     }
 
+    self.addVagina = function () {
+        alert('not implemented yet');
+    }
+
     self.getBreastName = function (index) {
         const i = self.selectedCharacter().obj.breastRows()[index()];
         const count = +i.breasts();
         const rating = +i.breastRatingRaw() + +i.breastRatingMod();
         return count + ' ' + getCupSize(rating) + ' breast' + (count > 1 ? 's' : '');
+    }
+
+    self.addBreastRow = function () {
+        alert('not implemented yet');
     }
 }
 
@@ -158,6 +171,26 @@ class StorageClass {
         this.value3 = 0;
         this.value4 = 0;
         this.version = 1;
+    }
+}
+
+class Cock {
+    constructor() {
+        this.classInstance = "Cock";
+        this.cLengthMod = 0;
+        this.cLengthRaw = 5;
+        this.cockColor = "pink";
+        this.cocksock = null;
+        this.cThicknessRatioMod = 0;
+        this.cThicknessRatioRaw = 1;
+        this.cType = 0;
+        this.flaccidMultiplier = 0.25;
+        this.flags = [];
+        this.knotMultiplier = 1;
+        this.neverSerialize = false;
+        this.piercing = null;
+        this.version = 3;
+        this.virgin = true;
     }
 }
 

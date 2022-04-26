@@ -254,8 +254,13 @@ class FlagField {
 }
 
 class ArrayField {
-    constructor(obj, key, nameFunc, fields) {
+    constructor(obj, key, nameFunc, addFunc, fields) {
         const keyDisplayText = key.replace('(', '').replace(')', '');
+        this.root = document.createElement('div');
+        this.addBtn = document.createElement('button');
+        this.addBtn.textContent = 'add';
+        this.addBtn.dataset.bind = 'click: $root.' + addFunc;
+        this.root.appendChild(this.addBtn);
 
         this.content = document.createElement('div');
         this.content.id = keyDisplayText + '-accordion'
@@ -297,7 +302,9 @@ class ArrayField {
 
         this.content.appendChild(this.item);
 
-        return this.content;
+        this.root.appendChild(this.content);
+
+        return this.root;
     }
 }
 
