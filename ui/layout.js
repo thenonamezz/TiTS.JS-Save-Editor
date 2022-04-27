@@ -37,10 +37,10 @@ class Group {
         }
 
         if (titleText) {
-            const titleElement = document.createElement('h3');
-            titleElement.textContent = titleText;
+            this.titleElement = document.createElement('h3');
+            this.titleElement.textContent = titleText;
             const hr = document.createElement('hr');
-            this.root.appendChild(titleElement);
+            this.root.appendChild(this.titleElement);
             this.root.appendChild(hr);
         }
 
@@ -53,6 +53,34 @@ class Group {
                     //    }
                     //}
                 }
+                this.root.appendChild(f);
+            });
+        }
+
+        return this.root;
+    }
+}
+
+class ArrayGroup {
+    constructor(titleText, func, fields) {
+        this.root = document.createElement('div');
+
+        this.titleElement = document.createElement('h3');
+        this.titleElement.textContent = titleText;
+        const hr = document.createElement('hr');
+        this.root.appendChild(this.titleElement);
+        this.root.appendChild(hr);
+
+        this.addButton = document.createElement('button');
+        this.addButton.innerHTML = 'Add <i class="fa-solid fa-plus"></i>';
+        this.addButton.type = 'button';
+        this.addButton.disabled = true;
+        this.addButton.className = 'btn btn-success btn-sm float-end text-white';
+        this.addButton.dataset.bind = 'click: $root.' + func + ', enable: $root.isEnabled';
+        this.titleElement.appendChild(this.addButton);
+
+        if (fields.length) {
+            fields.forEach(f => {
                 this.root.appendChild(f);
             });
         }

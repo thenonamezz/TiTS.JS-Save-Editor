@@ -128,8 +128,11 @@ var ViewModel = function (data) {
     }
 
     self.addPenis = function () {
-        const p = new Cock();
-        self.selectedCharacter().obj.cocks.push(ko.mapping.fromJS(p));
+        self.selectedCharacter().obj.cocks.push(ko.mapping.fromJS(new Cock()));
+    }
+
+    self.removePenis = function (data) {
+        self.selectedCharacter().obj.cocks.remove(data);
     }
 
     self.getVaginaName = function (index) {
@@ -140,7 +143,11 @@ var ViewModel = function (data) {
     }
 
     self.addVagina = function () {
-        alert('not implemented yet');
+        self.selectedCharacter().obj.vaginas.push(ko.mapping.fromJS(new Vagina()));
+    }
+
+    self.removeVagina = function (data) {
+        self.selectedCharacter().obj.vaginas.remove(data);
     }
 
     self.getBreastName = function (index) {
@@ -151,48 +158,20 @@ var ViewModel = function (data) {
     }
 
     self.addBreastRow = function () {
-        alert('not implemented yet');
+        self.selectedCharacter().obj.breastRows.push(ko.mapping.fromJS(new BreastRow()));
     }
+
+    self.removeBreastRow = function (data) {
+        self.selectedCharacter().obj.breastRows.remove(data);
+    }
+
+    self.getFlags = function () {
+        return ko.mapping.fromJS(Flags);
+    }
+
+    self.isLoading = ko.observable(false);
 }
 
-class StorageClass {
-    constructor() {
-        this.classInstance = "StorageClass";
-        this.combatOnly = false;
-        this.hidden = true;
-        this.iconName = "";
-        this.iconShade = "var(--textColor)";
-        this.minutesLeft = 0;
-        this.neverSerialize = false;
-        this.storageName = "";
-        this.toolTip = "";
-        this.value1 = 0;
-        this.value2 = 0;
-        this.value3 = 0;
-        this.value4 = 0;
-        this.version = 1;
-    }
-}
-
-class Cock {
-    constructor() {
-        this.classInstance = "Cock";
-        this.cLengthMod = 0;
-        this.cLengthRaw = 5;
-        this.cockColor = "pink";
-        this.cocksock = null;
-        this.cThicknessRatioMod = 0;
-        this.cThicknessRatioRaw = 1;
-        this.cType = 0;
-        this.flaccidMultiplier = 0.25;
-        this.flags = [];
-        this.knotMultiplier = 1;
-        this.neverSerialize = false;
-        this.piercing = null;
-        this.version = 3;
-        this.virgin = true;
-    }
-}
 
 // custom handler to write actual numbers and not strings when needed
 ko.bindingHandlers.numberInput = {

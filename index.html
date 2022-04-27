@@ -20,6 +20,8 @@
     <script type="text/javascript" src="data/global.js"></script>
     <script type="text/javascript" src="data/vm.js"></script>
     <script type="text/javascript" src="data/perks.js"></script>
+    <script type="text/javascript" src="data/flags.js"></script>
+    <script type="text/javascript" src="data/classes.js"></script>
 
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
     <link type="text/css" rel="stylesheet" href="styles/bootstrap-mod.css" />
@@ -106,6 +108,9 @@
                             //    behavior: 'smooth'
                             //})
 
+
+                            window.vm && vm.isLoading(true);
+
                             try {
                                 if (!window.vm) {
                                     window.vm = new ViewModel(json);
@@ -119,6 +124,8 @@
                             } catch (e) {
                                 alert('An error ocurred while binding the data.\n\n' + e);
                             }
+
+                            window.vm && vm.isLoading(false);
 
                             $('#saveFile').attr('disabled', false);
                             $('#saveName').attr('disabled', false);
@@ -426,8 +433,8 @@
                         //new SelectField(globalKeys.ValidTypes.Dicknipple, char, 'dickNippleType', ValueType.Integer), 'Dick Nipple Type'),
                         new IntegerField(char, 'dickNippleMultiplier', 'Dick Nipple Multiplier', null, 0)
                     ]),
-                    new Group('Breasts', [
-                        new ArrayField(char, 'breastRows()', 'getBreastName', 'addBreastRow', [
+                    new ArrayGroup('Breasts', 'addBreastRow', [
+                        new ArrayField(char, 'breastRows()', 'getBreastName', 'removeBreastRow', [
                             new IntegerField('', 'breasts', 'Count', null, 0),
                             new IntegerField('', 'breastRatingRaw', 'Rating Raw', null, 0),
                             new IntegerField('', 'breastRatingMod', 'Rating Mod', null, 0),
@@ -467,8 +474,8 @@
                         ]),
                         new SwitchField(char, 'cockVirgin', 'Cock Virgin')
                     ]),
-                    new Group('Penises', [
-                        new ArrayField(char, 'cocks()', 'getPenisName', 'addPenis', [
+                    new ArrayGroup('Penises', 'addPenis', [
+                        new ArrayField(char, 'cocks()', 'getPenisName', 'removePenis', [
                             new NestedGroup('', [
                                 new FloatField('', 'cLengthRaw', 'Length Raw', null, 0),
                                 new FloatField('', 'cLengthMod', 'Length Mod', null, 0),
@@ -501,8 +508,8 @@
                         new FloatField(char, 'clitLength', 'Clit Length', null, 0),
                         new SwitchField(char, 'vaginalVirgin', 'Vaginal Virgin')
                     ]),
-                    new Group('Vaginas', [
-                        new ArrayField(char, 'vaginas()', 'getVaginaName', 'addVagina', [
+                    new ArrayGroup('Vaginas', 'addVagina', [
+                        new ArrayField(char, 'vaginas()', 'getVaginaName', 'removeVagina', [
                             new IntegerField('', 'minLooseness', 'Min Looseness', null, 0),
                             new NestedGroup('', [
                                 new IntegerField('', 'loosenessRaw', 'Looseness Raw', null, 0),
@@ -527,10 +534,16 @@
             ]));
             // #endregion
 
-            // #region
+            // #region Perks
             $('#tabPerks').append(
                 document.createElement('p').textContent = 'Needs serious ui work but works behind the scenes (fyi if you use this in its current state some perks will disappear after removed)',
                 new PerkField(char, 'perks')
+            );
+            // #endregion
+
+            // #region Flags
+            $('#tabFlags').append(
+                new FlagContainer()
             );
             // #endregion
 
@@ -593,7 +606,10 @@
                     </div>
                     <div class="col-sm-auto p-2 text-center">
                         <div id="divLoadFile" class="d-inline-block">
-                            <button type="button" class="btn btn-sm btn-primary" onclick="loadFile.click()">Load file</button>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="loadFile.click()">
+                                <span id="aaaa" class="spinner-border spinner-border-sm" role="status" data-bind="visible: isLoading"></span>
+                                Load file
+                            </button>
                             <label class="visually-hidden" for="loadFile">Load File</label>
                             <input class="form-control" type="file" id="loadFile" hidden="hidden">
                         </div>

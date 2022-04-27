@@ -254,13 +254,8 @@ class FlagField {
 }
 
 class ArrayField {
-    constructor(obj, key, nameFunc, addFunc, fields) {
+    constructor(obj, key, nameFunc, deleteFunc, fields) {
         const keyDisplayText = key.replace('(', '').replace(')', '');
-        this.root = document.createElement('div');
-        this.addBtn = document.createElement('button');
-        this.addBtn.textContent = 'add';
-        this.addBtn.dataset.bind = 'click: $root.' + addFunc;
-        this.root.appendChild(this.addBtn);
 
         this.content = document.createElement('div');
         this.content.id = keyDisplayText + '-accordion'
@@ -287,6 +282,16 @@ class ArrayField {
 
         this.body = document.createElement('div');
         this.body.className = 'accordion-body';
+        const rbContainer = document.createElement('div');
+        rbContainer.className = 'd-flex justify-content-end';
+        const removeButton = document.createElement('button');
+        removeButton.innerHTML = 'Remove <i class="fa-solid fa-trash"></i>';
+        removeButton.type = 'button';
+        removeButton.disabled = true;
+        removeButton.className = 'btn btn-danger btn-sm';
+        removeButton.dataset.bind = 'click: $root.' + deleteFunc + ', enable: $root.isEnabled';
+        rbContainer.appendChild(removeButton);
+        this.body.appendChild(rbContainer);
 
         fields[0].className += ' mt-0';
 
@@ -302,9 +307,7 @@ class ArrayField {
 
         this.content.appendChild(this.item);
 
-        this.root.appendChild(this.content);
-
-        return this.root;
+        return this.content;
     }
 }
 
@@ -367,5 +370,22 @@ class PerkField {
         this.content.appendChild(valueContainer);
 
         return this.content;
+    }
+}
+
+class FlagContainer {
+    constructor() {
+        this.root = document.createElement('div');
+
+        this.body = document.createElement('div');
+        this.body.dataset.bind = 'foreach: $root.getFlags()';
+
+        this.flagName = document.createElement('p');
+        this.flagName.dataset.bind = 'text: $data';
+
+        this.body.appendChild(this.flagName);
+        this.root.appendChild(this.body);
+
+        return this.root;
     }
 }
