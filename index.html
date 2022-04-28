@@ -109,7 +109,7 @@
                             //})
 
 
-                            window.vm && vm.isLoading(true);
+                            //window.vm && vm.isLoading(true);
 
                             try {
                                 if (!window.vm) {
@@ -125,7 +125,7 @@
                                 alert('An error ocurred while binding the data.\n\n' + e);
                             }
 
-                            window.vm && vm.isLoading(false);
+                            //window.vm && vm.isLoading(false);
 
                             $('#saveFile').attr('disabled', false);
                             $('#saveName').attr('disabled', false);
@@ -536,13 +536,14 @@
 
             // #region Perks
             $('#tabPerks').append(
-                document.createElement('p').textContent = 'Needs serious ui work but works behind the scenes (fyi if you use this in its current state some perks will disappear after removed)',
+                //document.createElement('p').textContent = 'Needs serious ui work but works behind the scenes (fyi if you use this in its current state some perks will disappear after removed)',
                 new PerkField(char, 'perks')
             );
             // #endregion
 
             // #region Flags
             $('#tabFlags').append(
+                document.createElement('p').textContent = 'as you can probably tell, this has horrible performance',
                 new FlagContainer()
             );
             // #endregion
@@ -607,7 +608,7 @@
                     <div class="col-sm-auto p-2 text-center">
                         <div id="divLoadFile" class="d-inline-block">
                             <button type="button" class="btn btn-sm btn-primary" onclick="loadFile.click()">
-                                <span id="aaaa" class="spinner-border spinner-border-sm" role="status" data-bind="visible: isLoading"></span>
+                                <!--<span id="aaaa" class="spinner-border spinner-border-sm" role="status" data-bind="visible: isLoading"></span>-->
                                 Load file
                             </button>
                             <label class="visually-hidden" for="loadFile">Load File</label>
@@ -659,7 +660,7 @@
                     <button class="nav-link" id="navInventory" data-bs-toggle="tab" data-bs-target="#tabInventory" type="button" role="tab" aria-controls="tabInventory" aria-selected="false">Inventory</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="navKeyItems" data-bs-toggle="tab" data-bs-target="#tabKeyItems" type="button" role="tab" aria-controls="tabKeyItems" aria-selected="false">Key Items</button>
+                    <button class="nav-link text-nowrap" id="navKeyItems" data-bs-toggle="tab" data-bs-target="#tabKeyItems" type="button" role="tab" aria-controls="tabKeyItems" aria-selected="false">Key Items</button>
                 </li>
             </ul>
             <div class="tab-content p-2">

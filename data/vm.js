@@ -166,7 +166,8 @@ var ViewModel = function (data) {
     }
 
     self.getFlags = function () {
-        return ko.mapping.fromJS(Flags);
+        //return ko.mapping.fromJS(Flags);
+        return Flags;
     }
 
     self.isLoading = ko.observable(false);
@@ -192,5 +193,23 @@ ko.bindingHandlers.numberInput = {
     },
     update: function (element, valueAccessor, allBindingsAccessor) {
         element.value = valueAccessor()();
+    }
+};
+
+ko.bindingHandlers.keyvalue = {
+    makeTemplateValueAccessor: function (valueAccessor) {
+        return function () {
+            var values = valueAccessor();
+            var array = [];
+            for (var key in values)
+                array.push({ key: key, value: values[key] });
+            return array;
+        };
+    },
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        return ko.bindingHandlers.foreach.init(element, ko.bindingHandlers.keyvalue.makeTemplateValueAccessor(valueAccessor));
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        return ko.bindingHandlers.foreach.update(element, ko.bindingHandlers.keyvalue.makeTemplateValueAccessor(valueAccessor), allBindings, viewModel, bindingContext);
     }
 };
