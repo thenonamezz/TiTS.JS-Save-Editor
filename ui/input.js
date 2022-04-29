@@ -379,7 +379,7 @@ class FlagContainer {
 
         this.body = document.createElement('div');
         //this.body = document.createElement('table');
-        this.body.dataset.bind = 'keyvalue: $root.getFlags()';
+        this.body.dataset.bind = 'foreach: $root.flags.items';
 
         //this.flagItem = document.createElement('tr');
         this.flagItem = document.createElement('div');

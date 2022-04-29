@@ -13,6 +13,7 @@
     <script type="text/javascript" src="scripts/filesaver.js"></script>
     <script type="text/javascript" src="scripts/ko.js"></script>
     <script type="text/javascript" src="scripts/ko-mapping.js"></script>
+    <script type="text/javascript" src="scripts/ko-dict.js"></script>
     <script type="text/javascript" src="scripts/util.js"></script>
     <!--<script type="text/javascript" src="scripts/util.js"></script>-->
     <script type="text/javascript" src="ui/input.js"></script>
@@ -111,13 +112,14 @@
 
                             //window.vm && vm.isLoading(true);
 
+                            
                             try {
                                 if (!window.vm) {
                                     window.vm = new ViewModel(json);
                                     ko.applyBindings(vm);
                                 }
                                 else {
-                                    ko.mapping.fromJS(json, vm);
+                                    ko.mapping.fromJS(json, vmmapping, vm);
                                 }
 
                                 vm.isEnabled(true);
@@ -543,8 +545,12 @@
             // #endregion
 
             // #region Flags
+            const paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuff = document.createElement('p');
+            paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuff.textContent = 'doesnt work correctly if you load a save on top of another one, at least not yet'
+            paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuff.className = 'pb-3';
+
             $('#tabFlags').append(
-                document.createElement('p').textContent = 'as you can probably tell, this has horrible performance',
+                paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuff,
                 new FlagContainer()
             );
             // #endregion

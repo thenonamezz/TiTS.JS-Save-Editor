@@ -1,10 +1,23 @@
 // ko is cool, but it feels old and is finicky,
 // still, a lot better than whatever the hell i was doing before and opens up more potential stuff
 
+var vmmapping = {
+    'flags': {
+        create: function (options) {
+            if (options.data.hasOwnProperty('pathOverrides')) {
+                return new ko.observableDictionary({ ...Flags, ...options.data });
+            }
+            else {
+                return options.data;
+            }
+        }
+    }
+}
+
 var ViewModel = function (data) {
     var self = this;
 
-    ko.mapping.fromJS(data, {}, self);
+    ko.mapping.fromJS(data, vmmapping, self);
 
     self.selectedCharacter = ko.observable();
 
@@ -27,11 +40,19 @@ var ViewModel = function (data) {
         return obj;
     };
 
+    //self.originalFlags = self.flags().slice();
+
+    //self.flags = ko.computed(function () {
+    //    if (self.selectedCharacter()) {
+    //        return new ko.observableDictionary();
+    //    }
+    //}, self);
+
     //self.getPerks = ko.computed(function () {
     self.internal_perks = ko.computed(function () {
         if (self.selectedCharacter()) {
             // even though the objects look the same, due to reference the char perks dont get counted as "owned" by the character,
-            // this fixes that AND adds any perks that are not present/stored internally in the editor data
+            // this fixes that and adds any perks that are not present/stored internally in the editor data
 
             let dPerks = ko.observableArray(self.perksFromData());
             let cPerks = self.selectedCharacter().obj.perks;
@@ -165,10 +186,15 @@ var ViewModel = function (data) {
         self.selectedCharacter().obj.breastRows.remove(data);
     }
 
-    self.getFlags = function () {
-        //return ko.mapping.fromJS(Flags);
-        return Flags;
-    }
+    //self.getFlags = function () {
+    //    //return ko.mapping.fromJS(Flags);
+    //    return Flags;
+    //}
+
+    self.getFlags = new ko.observableDictionary(Flags)
+
+    self.saveFlags = new ko.observableDictionary(self.flags)
+
 
     self.isLoading = ko.observable(false);
 }
@@ -210,6 +236,31 @@ ko.bindingHandlers.keyvalue = {
         return ko.bindingHandlers.foreach.init(element, ko.bindingHandlers.keyvalue.makeTemplateValueAccessor(valueAccessor));
     },
     update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+        return ko.bindingHandlers.foreach.update(element, ko.bindingHandlers.keyvalue.makeTemplateValueAccessor(valueAccessor), allBindings, viewModel, bindingContext);
+    }
+};
+
+ko.bindingHandlers.flags = {
+    makeTemplateValueAccessor: function (valueAccessor) {
+        return function () {
+            var values = valueAccessor();
+            var array = [];
+            for (var key in values)
+                array.push({ key: key, value: values[key] });
+            return array;
+        };
+    },
+    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+
+        var a = '';
+
+        return ko.bindingHandlers.foreach.init(element, ko.bindingHandlers.keyvalue.makeTemplateValueAccessor(valueAccessor));
+    },
+    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+
+        var a = '';
+
+
         return ko.bindingHandlers.foreach.update(element, ko.bindingHandlers.keyvalue.makeTemplateValueAccessor(valueAccessor), allBindings, viewModel, bindingContext);
     }
 };
