@@ -373,6 +373,66 @@ class PerkField {
     }
 }
 
+class SeField {
+    constructor(obj, key) {
+        this.content = document.createElement('div');
+        this.content.className = 'text-light my-3 w-100 editor-perk';
+        this.content.dataset.bind = 'foreach: $root.internal_se()';
+
+        const container = document.createElement('div');
+        container.className = 'form-check form-switch mt-5';
+
+        const checkBox = document.createElement('input');
+        checkBox.type = 'checkbox';
+        checkBox.role = 'switch';
+        checkBox.className = 'form-check-input perk-switch';
+        checkBox.setAttribute('disabled', true);
+        checkBox.dataset.bind = `checked: $root.` + obj + (obj ? '.' : '') + key + `,
+                                 checkedValue: $data,
+                                 enable: $root.isEnabled`;
+
+        const chkLabel = document.createElement('label');
+        chkLabel.className = 'form-check-label';
+        chkLabel.dataset.bind = 'text: storageName';
+
+        const seDesc = document.createElement('p');
+        //seDesc.dataset.bind = "text: $data.toolTip, class: $root.hasPerk($data) ? '' : 'text-muted' ";
+        seDesc.dataset.bind = "text: $data.toolTip";
+
+        //const valueContainer = document.createElement('div');
+        //valueContainer.dataset.bind = 'visible: $root.hasPerk($data)';
+        //for (var i = 1; i < 5; i++) {
+        //    var div = document.createElement('div');
+
+        //    var label = document.createElement('label');
+        //    label.className = 'label-sm';
+        //    label.textContent = 'Value ' + i;
+
+        //    var inputWrapper = document.createElement('div');
+        //    inputWrapper.className = 'input-group input-group-sm';
+        //    var input = document.createElement('input');
+        //    input.className = 'form-control form-control-sm';
+        //    input.setAttribute('disabled', true);
+        //    input.dataset.bind = 'value: $data.value' + i + ' , enable: $root.isEnabled';
+        //    inputWrapper.appendChild(input);
+
+        //    div.appendChild(label);
+        //    div.appendChild(inputWrapper);
+
+        //    valueContainer.appendChild(div);
+        //}
+
+        container.appendChild(checkBox);
+        container.appendChild(chkLabel);
+
+        this.content.appendChild(container);
+        this.content.appendChild(seDesc);
+        //this.content.appendChild(valueContainer);
+
+        return this.content;
+    }
+}
+
 class FlagContainer {
     constructor() {
         this.root = document.createElement('div');

@@ -82,6 +82,29 @@ var ViewModel = function (data) {
 
     self.perksFromData = ko.mapping.fromJS(Perks);
 
+    self.internal_se = ko.computed(function () {
+        if (self.selectedCharacter()) {
+            let dSe = ko.observableArray(self.seFromData());
+            let cSe = self.selectedCharacter().obj.statusEffects;
+
+            for (var i = 0; i < cSe().length; i++) {
+                dSe.remove(function (se) {
+                    return se.storageName() === cSe()[i].storageName();
+                });
+            }
+
+            self.seFromData = ko.observableArray(ko.observableArray(cSe().concat(dSe())).sorted(function (l, r) {
+                return l.storageName() === r.storageName() ? 0
+                    : l.storageName() < r.storageName() ? -1
+                        : 1;
+            }));
+
+            return self.seFromData;
+        }
+    }, self);
+
+    self.seFromData = ko.mapping.fromJS(se);
+
     self.isEnabled = ko.observable(false);
 
     self.nameChanged = function (data, event) {
