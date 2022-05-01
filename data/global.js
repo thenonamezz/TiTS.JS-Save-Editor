@@ -1,4 +1,4 @@
-const globalKeys = {
+const GlobalKeys = {
     Class: [
         { name: "Smuggler", value: 0 },
         { name: "Mercenary", value: 1 },

@@ -15,15 +15,18 @@
     <script type="text/javascript" src="scripts/ko-mapping.js"></script>
     <script type="text/javascript" src="scripts/ko-dict.js"></script>
     <script type="text/javascript" src="scripts/util.js"></script>
-    <!--<script type="text/javascript" src="scripts/util.js"></script>-->
-    <script type="text/javascript" src="ui/input.js"></script>
-    <script type="text/javascript" src="ui/layout.js"></script>
-    <script type="text/javascript" src="data/global.js"></script>
-    <script type="text/javascript" src="data/vm.js"></script>
-    <script type="text/javascript" src="data/perks.js"></script>
-    <script type="text/javascript" src="data/flags.js"></script>
     <script type="text/javascript" src="data/classes.js"></script>
-    <script type="text/javascript" src="data/se.js"></script>
+    <script type="text/javascript" src="data/codex.js"></script>
+    <script type="text/javascript" src="data/flags.js"></script>
+    <script type="text/javascript" src="data/global.js"></script>
+    <script type="text/javascript" src="data/perks.js"></script>
+    <script type="text/javascript" src="data/status.js"></script>
+    <script type="text/javascript" src="data/vm.js"></script>
+    <script type="text/javascript" src="ui/display.js"></script>
+    <script type="text/javascript" src="ui/layout.js"></script>
+    <script type="text/javascript" src="ui/container.js"></script>
+    <script type="text/javascript" src="ui/input.js"></script>
+
 
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
     <link type="text/css" rel="stylesheet" href="styles/bootstrap-mod.css" />
@@ -35,6 +38,7 @@
     <script>
         //in case they switch to using a custom extension at some point like they do with coc2
         const fileExtension = '.json';
+        const minFileNameLenght = 1;
 
         $(() => {
             $('#toolbarContainer').collapse();
@@ -110,29 +114,24 @@
                             //    behavior: 'smooth'
                             //})
 
+                            window.vm || (window.vm = new ViewModel(json));
 
-                            //window.vm && vm.isLoading(true);
-
-                            
                             try {
-                                if (!window.vm) {
-                                    window.vm = new ViewModel(json);
+                                if (!vm.saveLoaded()) {
+                                    vm.saveLoaded(true);
                                     ko.applyBindings(vm);
                                 }
                                 else {
-                                    ko.mapping.fromJS(json, vmmapping, vm);
+                                    ko.mapping.fromJS(json, window.mapping, vm);
                                 }
-
-                                vm.isEnabled(true);
                             } catch (e) {
-                                alert('An error ocurred while binding the data.\n\n' + e);
+                                alert('An internal error ocurred while processing the save data\n\n' + e)
                             }
 
-                            //window.vm && vm.isLoading(false);
+                            const fileName = file.name.replace(fileExtension, '');
+                            vm.originalSaveName(fileName);
+                            vm.saveName(fileName);
 
-                            $('#saveFile').attr('disabled', false);
-                            $('#saveName').attr('disabled', false);
-                            //$('#saveName').val(save.saveFile.name);
                             alert("Save file loaded!");
                         });
 
@@ -146,9 +145,8 @@
                 }
             }
 
-            $('#loadFile').on('change', () => {
-                const input = $('#loadFile');
-                var file = input.prop('files')[0];
+            $('#loadFile').on('input', function () {
+                var file = $(this).prop('files')[0];
                 if (!file) {
                     alert('Error loading the file, please try again.');
                 }
@@ -157,393 +155,33 @@
                 }
             });
 
-            $('#saveName').on('focus', () => {
-                const input = $('#saveName');
-                const val = input.val();
-                if (val.lastIndexOf(fileExtension) == val.length - 5) {
-                    input.val(val.substring(0, val.lastIndexOf(fileExtension)));
+            $('#inputSaveName').on('change', function () {
+                // alert('File name must be ' + requiredLength + ' character' + (requiredLength > 1 ? 's' : '') + ' or longer');                //
+
+                const name = $(this).val();
+                if (name.length <= minFileNameLenght) {
+                    vm.saveName(vm.originalSaveName());
                 }
             });
 
-            $('#saveName').on('blur', () => {
-                const input = $('#saveName');
-                const requiredLength = 1;
-                const val = input.val();
-                if (val.length >= requiredLength) {
-                    input.val(val + fileExtension);
-                }
-                else {
-                    //input.val(save.saveFile.name + fileExtension);
-                    alert('File name must be ' + requiredLength + ' character' + (requiredLength > 1 ? 's' : '') + ' or longer');
-                }
-            });
+            $('#btnSaveFile').on('click', () => {
+                const blob = new Blob([ko.mapping.toJSON(vm.save)], { type: 'text/json' });
 
-            $('#saveFile').on('click', () => {
-                var mapping = {
-                    'ignore': ["selectedCharacter", "chars", "isPC", "getGlobal", "internal_perks", "hasPerk", "perksFromData",
-                        "isEnabled", "nameChanged", "validateNumberInput", "emailChanged", "getPenisName", "getVaginaName", "getBreastName",
-                        "isLoading", "getFlags", "removeBreastRow", "addBreastRow", "removeVagina", "addVagina", "removePenis", "addPenis", ]
-                }
-
-                //const blob = new Blob([ko.toJSON(vm, mapping)], { type: 'text/json' });
-                const blob = new Blob([ko.mapping.toJSON(vm, mapping)], { type: 'text/json' });
-                var fileName = $('#saveName').val();
+                var fileName = vm.saveName() || vm.originalSaveName();
                 if (!fileName) {
-                    fileName = "unnamed" + fileExtension;
+                    fileName = "unnamed";
                 }
-                saveAs(blob, fileName);
+
+                saveAs(blob, fileName + '.' + fileExtension);
             });
             // #endregion
 
-            // #region UI
-            const instance = 'gameInstanceInfo';
-            const char = 'selectedCharacter().obj';
-            const pc = 'characters.PC';
-            const butt = char + '.ass';
-            const flags = 'flags';
-
-            // #region Game
-            $('#tabGame').append(new Tab([
-                new Row([
-                    new Group('Internal', [
-                        new TextField(flags, 'PC_EMAIL_ADDRESS', 'E-Mail', null, 'emailChanged'),
-                        new TextField(instance, 'note', 'Note'),
-                        new IntegerField('', 'days', 'Days', 'days', 0),
-                        new IntegerField('', 'hours', 'Hours', 'hours', 0, 23),
-                        new IntegerField('', 'minutes', 'Minutes', 'minutes', 0, 59),
-                        //rr
-                    ]),
-                    new Group('Game Settings', [
-                        new SwitchField('', 'easyMode', 'Easy Mode'),
-                        new SwitchField('', 'sillyMode', 'Silly Mode'),
-                        new SwitchField(instance, 'miniMapVisible', 'Minimap visible'),
-                        new SwitchField(instance, 'minimapRolledOut', 'Minimap rolled out'),
-                        new SwitchField(instance, 'bustRolledOut', 'Bust rolled out'),
-                        new SwitchField(instance, 'dateTimeVisible', 'Date and Time visible')
-                    ])
-                ])
-            ]));
-            // #endregion
-
-            // #region Stats
-            $('#tabStats').append(new Tab([
-                new Row([
-                    new Group('General', [
-                        new TextField(char, 'short', 'Name', null, 'nameChanged'),
-                        new IntegerField(char, 'credits', 'Credits', null, 0),
-                        new IntegerField(char, 'personality', 'Personality', null, 0, 100),
-                        new IntegerField(char, 'exhibitionismRaw', 'Exhibitionism', null, 0, 100)
-                    ]),
-                    new Group('Advancement', [
-                        new IntegerField(char, 'level', 'Level', null, 0, 10),
-                        //new IntegerField(char, 'XPRaw', 'XP', null, 0, null, null, true),
-                        new IntegerField(pc, 'XPRaw', 'XP', null, 0, null, null, true),
-                        //new IntegerField(char, 'unspentStatPoints', 'Stat Points', null, 0, null, null, true)
-                        new IntegerField(pc, 'unspentStatPoints', 'Stat Points', null, 0, null, null, true)
-                    ]),
-                    new Group('Appearance', [
-                        new IntegerField(char, 'tallness', 'Height', 'inches', 0),
-                        new IntegerField(char, 'thickness', 'Thickness', null, 0, 100),
-                        new IntegerField(char, 'tone', 'Tone', null, 0, 100),
-                        new IntegerField(char, 'femininity', 'Femininity', null, 0, 100)
-                    ]),
-                ]),
-                new Row([
-                    new Group('Core', [
-                        new NestedGroup('', [
-                            new FloatField(char, 'Internal_aimRaw', 'Aim Raw', null, 0),
-                            new IntegerField(char, 'aimMod', 'Aim Mod', null, 0),
-                        ]),
-                        new NestedGroup('', [
-                            new FloatField(char, 'Internal_intelligenceRaw', 'Intelligence Raw', null, 0),
-                            new IntegerField(char, 'intelligenceMod', 'Intelligence Mod', null, 0),
-                        ]),
-                        new NestedGroup('', [
-                            new FloatField(char, 'Internal_physiqueRaw', 'Physique Raw', null, 0),
-                            new IntegerField(char, 'physiqueMod', 'Physique Mod', null, 0),
-                        ]),
-                        new NestedGroup('', [
-                            new FloatField(char, 'Internal_reflexesRaw', 'Reflexes Raw', null, 0),
-                            new IntegerField(char, 'reflexesMod', 'Reflexes Mod', null, 0),
-                        ]),
-                        new NestedGroup('', [
-                            new FloatField(char, 'Internal_willpowerRaw', 'Willpower Raw', null, 0),
-                            new IntegerField(char, 'willpowerMod', 'Willpower Mod', null, 0),
-                        ]),
-                        new NestedGroup('', [
-                            new FloatField(char, 'Internal_libidoRaw', 'Libido Raw', null, 0, 100),
-                            new IntegerField(char, 'libidoMod', 'Libido Mod', null, 0, 100),
-                        ]),
-                        new NestedGroup('', [
-                            new FloatField(char, 'Internal_taintRaw', 'Taint Raw', null, 0, 100),
-                            new IntegerField(char, 'taintMod', 'Taint Mod', null, 0, 100)
-                        ])
-                    ]),
-                    new Group('Combat', [
-                        new NestedGroup('', [
-                            new IntegerField(char, 'HPRaw', 'HP Raw', null, 0),
-                            new IntegerField(char, 'HPMod', 'HP Mod', null, 0)
-                        ]),
-                        new NestedGroup('', [
-                            new IntegerField(char, 'energyRaw', 'Energy Raw', null, 0),
-                            new IntegerField(char, 'energyMod', 'Energy Mod', null, 0)
-                        ]),
-                        new NestedGroup('', [
-                            new IntegerField(char, 'lustRaw', 'Lust Raw', null, 0, 100),
-                            new IntegerField(char, 'lustMod', 'Lust Mod', null, 0)
-                        ]),
-                        new IntegerField(char, 'shieldsRaw', 'Shields Raw', null, 0)
-                    ]),
-                ]),
-            ]));
-            // #endregion
-
-            // #region Head
-            $('#tabHead').append(new Tab([
-                new Row([
-                    new Group('Head', [
-                        new SelectField('ValidTypes.Antennae', char, 'antennaeType', 'Antennae Type'),
-                        new IntegerField(char, 'antennae', 'Antennae Count', null, 0),
-                        new SelectField('ValidTypes.Horn', char, 'hornType', 'Horn Type'),
-                        new IntegerField(char, 'horns', 'Horn Count', null, 0),
-                        new FloatField(char, 'hornLength', 'Horn Length', 'inches', 0)
-                    ]),
-                    new Group('Hair', [
-                        new SelectField('HairType', char, 'hairType', 'Hair Type'),
-                        new FloatField(char, 'hairLength', 'Hair Length', 'inches', 0),
-                        new TextField(char, 'hairColor', 'Hair Color'),
-                        // todo hair style
-                        new FloatField(char, 'beardLength', 'Beard Length', 'inches', 0),
-                        new SelectField('HairType', char, 'beardType', 'Beard Type'),
-                        // todo beard style
-                    ])
-                ]),
-                new Row([
-                    new Group('Face', [
-                        new SelectField('ValidTypes.Face', char, 'faceType', 'Face Type'),
-                        new FlagField('ValidFlags.Face', char, 'faceFlags', 'Face Flags')
-                    ]),
-                    new Group('Tongue', [
-                        new SelectField('ValidTypes.Tongue', char, 'tongueType', 'Tongue Type'),
-                        new FlagField('ValidFlags.Tongue', char, 'tongueFlags', 'Tongue Flags')
-                    ])
-                ]),
-                new Row([
-                    new Group('Lips', [
-                        new TextField(char, 'lipColor', 'Lip Color'),
-                        new IntegerField(char, 'lipMod', 'Lip Mod', null, 0)
-                    ]),
-                    new Group('Ears', [
-                        new SelectField('ValidTypes.Ear', char, 'earType', 'Ear Type'),
-                        new FloatField(char, 'earLength', 'Ear Length', 'inches', 0),
-                        //find ear flags
-                        //new FlagField(globalKeys.ValidFlags.Ear, new Binding('earFlags'), 'Ear Flags'),
-                    ]),
-                    new Group('Eyes', [
-                        new SelectField('ValidTypes.Eye', char, 'eyeType', 'Eye Type'),
-                        new TextField(char, 'eyeColor', 'Eye Color')
-                    ])
-                ])
-            ]));
-            // #endregion
-
-            // #region Body
-            $('#tabBody').append(new Tab([
-                new Row([
-                    new Group('General', [
-                        new SwitchField(char, 'gills', 'Has Gills'),
-                        new FloatField(char, 'elasticity', 'Elasticity', null, 0),
-                        new SelectField('GenitalSpot', char, 'genitalSpot', 'Genital Spot'),
-                        new NestedGroup('', [
-                            new IntegerField(char, 'hipRatingRaw', 'Hip Rating Raw', null, 0),
-                            new IntegerField(char, 'hipRatingMod', 'Hip Rating Mod', null, 0),
-                        ]),
-                        new NestedGroup('', [
-                            new IntegerField(char, 'buttRatingRaw', 'Butt Rating Raw', null, 0),
-                            new IntegerField(char, 'buttRatingMod', 'Butt Rating Mod', null, 0)
-                        ]),
-                        new NestedGroup('', [
-                            new IntegerField(char, 'bellyRatingRaw', 'Belly Rating Raw', null, 0),
-                            new IntegerField(char, 'bellyRatingMod', 'Belly Rating Mod', null, 0)
-                        ])
-                    ]),
-                    new Group('Skin', [
-                        new SelectField('SkinType', char, 'skinType', 'Skin Type'),
-                        new TextField(char, 'skinTone', 'Skin Tone'),
-                        new TextField(char, 'skinAccent', 'Skin Accent'),
-                        new TextField(char, 'furColor', 'Fur Color'),
-                        new TextField(char, 'scaleColor', 'Scale Color'),
-                        //find skin flags
-                        //new FlagField(globalKeys.ValidFlags.Skin, new Binding('skinFlags'), 'Skin Flags')
-                    ])
-                ]),
-                new Row([
-                    new Group('Wings', [
-                        new SelectField('ValidTypes.Wing', char, 'wingType', 'Wing Type'),
-                        new IntegerField(char, 'wingCount', 'Wing Count', null, 0)
-                    ]),
-                    new Group('Arms', [
-                        new SelectField('ValidTypes.Arm', char, 'armType', 'Arm Type'),
-                        new FlagField('ValidFlags.Arm', char, 'armFlags', 'Arm Flags')
-                    ]),
-                    new Group('Legs', [
-                        new SelectField('ValidTypes.Leg', char, 'legType', 'Leg Type'),
-                        new IntegerField(char, 'legCount', 'Leg Count', null, 0),
-                        new FlagField('ValidFlags.Leg', char, 'legFlags', 'Leg Flags')
-                    ])
-                ]),
-                new Row([
-                    new Group('Butt', [
-                        //todo virgin
-                        new IntegerField(butt, 'minLooseness', 'Min Looseness', null, 0),
-                        new IntegerField(butt, 'bonusCapacity', 'Bonus Capacity', null, 0),
-                        //find ass flags
-                        //new FlagField(globalKeys.ValidFlags.Ass, new Binding('flags', 'ass'), 'Ass Flags'),
-                        new NestedGroup('', [
-                            new IntegerField(butt, 'loosenessRaw', 'Looseness Raw', null, 0),
-                            new IntegerField(butt, 'loosenessMod', 'Looseness Mod', null, 0)
-                        ]),
-                        new NestedGroup('', [
-                            new IntegerField(butt, 'wetnessRaw', 'Wetness Raw', null, 0),
-                            new IntegerField(butt, 'wetnessMod', 'Wetness Mod', null, 0)
-                        ])
-                    ]),
-                    new Group('Tail', [
-                        new SelectField('ValidTypes.Tail', char, 'tailType', 'Tail Type'),
-                        new IntegerField(char, 'tailCount', 'Tail Count', null, 0),
-                        new IntegerField(char, 'tailVenom', 'Tail Venom', null, 0, 100),
-                        new IntegerField(char, 'tailRecharge', 'Tail Recharge', null, 0),
-                        new SelectField('TailGenital', char, 'tailGenital', 'Tail Genital Type'),
-                        // find tail arg
-                        //new SelectField(globalKeys.TailGenital, char, 'tailGenital', ValueType.Integer), 'Tail Genital Type'),
-                        new TextField(char, 'tailGenitalColor', 'Tail Genital Color'),
-                        new FlagField('ValidFlags.Tail', char, 'tailFlags', 'Tail Flags')
-                    ])
-                ]),
-                new Row([
-                    new Group('Milk', [
-                        new SelectField('FluidType', char, 'milkType', 'Milk Type'),
-                        new FloatField(char, 'milkFullness', 'Milk Fullness', null, 0),
-                        new IntegerField(char, 'milkRate', 'Milk Rate', null, 0),
-                        new IntegerField(char, 'milkMultiplier', 'Milk Multiplier', null, 0),
-                        new IntegerField(char, 'milkStorageMultiplier', 'Milk Storage Multiplier', null, 0)
-                    ]),
-                    new Group('Nipples', [
-                        new TextField(char, 'nippleColor', 'Nipple Color'),
-                        new IntegerField(char, 'nipplesPerBreast', 'Nipples Per Breast', null, 0),
-                        new FloatField(char, 'nippleLengthRatio', 'Nipple Length Ratio', null, 0),
-                        new FloatField(char, 'nippleWidthRatio', 'Nipple Width Ratio', null, 0),
-                        //find dicknipple type
-                        //new SelectField(globalKeys.ValidTypes.Dicknipple, char, 'dickNippleType', ValueType.Integer), 'Dick Nipple Type'),
-                        new IntegerField(char, 'dickNippleMultiplier', 'Dick Nipple Multiplier', null, 0)
-                    ]),
-                    new ArrayGroup('Breasts', 'addBreastRow', [
-                        new ArrayField(char, 'breastRows()', 'getBreastName', 'removeBreastRow', [
-                            new IntegerField('', 'breasts', 'Count', null, 0),
-                            new IntegerField('', 'breastRatingRaw', 'Rating Raw', null, 0),
-                            new IntegerField('', 'breastRatingMod', 'Rating Mod', null, 0),
-                            new IntegerField('', 'breastRatingLactationMod', 'Lactation Mod', null, 0),
-                            new IntegerField('', 'breastRatingHoneypotMod', 'Honeypot Mod', null, 0),
-                            new SelectField('NippleType', '', 'nippleType', 'Nipple Type'),
-                            new FloatField('', 'fullness', 'Fullness', null, 0),
-                            new FlagField('areola', '', 'areolaFlags', 'Areola Flags')
-                        ])
-                        //todo figure out breasts
-                    ])
-                ])
-            ]));
-            // #endregion
-
-            // #region Crotch
-            $('#tabCrotch').append(new Tab([
-                // todo multiple array thingy
-                new Row([
-                    new Group('Male Organs', [
-                        new IntegerField(char, 'balls', 'Balls', null, 0),
-                        new NestedGroup('', [
-                            new FloatField(char, 'ballSizeRaw', 'Ball Size Raw', null, 0),
-                            new IntegerField(char, 'ballSizeMod', 'Ball Size Mod', null, 0)
-                        ]),
-                        new FloatField(char, 'ballFullness', 'Ball Fullness', null, 0, 100),
-                        new FloatField(char, 'ballEfficiency', 'Ball Efficiency', null, 0),
-                        new FloatField(char, 'refractoryRate', 'Refractory Rate', null, 0),
-                        new SelectField('FluidType', char, 'cumType', 'Cum Type'),
-                        new NestedGroup('', [
-                            new FloatField(char, 'cumMultiplierRaw', 'Cum Multiplier Raw', null, 0),
-                            new IntegerField(char, 'cumMultiplierMod', 'Cum Multiplier Raw', null, 0)
-                        ]),
-                        new NestedGroup('', [
-                            new FloatField(char, 'cumQualityRaw', 'Cum Quality Raw', null, 0),
-                            new IntegerField(char, 'cumQualityMod', 'Cum Quality Mod', null, 0)
-                        ]),
-                        new SwitchField(char, 'cockVirgin', 'Cock Virgin')
-                    ]),
-                    new ArrayGroup('Penises', 'addPenis', [
-                        new ArrayField(char, 'cocks()', 'getPenisName', 'removePenis', [
-                            new NestedGroup('', [
-                                new FloatField('', 'cLengthRaw', 'Length Raw', null, 0),
-                                new FloatField('', 'cLengthMod', 'Length Mod', null, 0),
-                            ]),
-                            new NestedGroup('', [
-                                new FloatField('', 'cThicknessRatioRaw', 'Thickness Ratio Raw', null, 0),
-                                new FloatField('', 'cThicknessRatioMod', 'Thickness Ratio Mod', null, 0),
-                            ]),
-                            new SelectField('BodyType', '', 'cType', 'Type'),
-                            new TextField('', 'cockColor', 'Color'),
-                            new FloatField('', 'knotMultiplier', 'Knot Multiplier', null, 0),
-                            new FloatField('', 'flaccidMultiplier', 'Flaccid Multiplier', null, 0),
-                            new SwitchField('', 'virgin', 'Virgin'),
-                            new FlagField('BodyFlag', '', 'flags', 'Flags') //todo flags
-                            //todo piercing
-                        ])
-                    ])
-                ]),
-                new Row([
-                    new Group('Female Organs', [
-                        new NestedGroup('', [
-                            new FloatField(char, 'fertilityRaw', 'Fertility Raw', null, 0),
-                            new IntegerField(char, 'fertilityMod', 'Fertility Mod', null, 0)
-                        ]),
-                        new SelectField('FluidType', char, 'girlCumType', 'Cum Type'),
-                        new NestedGroup('', [
-                            new FloatField(char, 'girlCumMultiplierRaw', 'Cum Multiplier Raw', null, 0),
-                            new IntegerField(char, 'girlCumMultiplierMod', 'Cum Multiplier Mod', null, 0)
-                        ]),
-                        new FloatField(char, 'clitLength', 'Clit Length', null, 0),
-                        new SwitchField(char, 'vaginalVirgin', 'Vaginal Virgin')
-                    ]),
-                    new ArrayGroup('Vaginas', 'addVagina', [
-                        new ArrayField(char, 'vaginas()', 'getVaginaName', 'removeVagina', [
-                            new IntegerField('', 'minLooseness', 'Min Looseness', null, 0),
-                            new NestedGroup('', [
-                                new IntegerField('', 'loosenessRaw', 'Looseness Raw', null, 0),
-                                new IntegerField('', 'loosenessMod', 'Looseness Mod', null, 0)
-                            ]),
-                            new NestedGroup('', [
-                                new IntegerField('', 'wetnessRaw', 'Wetness Raw', null, 0),
-                                new IntegerField('', 'wetnessMod', 'Wetness Mod', null, 0)
-                            ]),
-                            new IntegerField('', 'bonusCapacity', 'Bonus Capacity', null, 0),
-                            new SelectField('BodyType', '', 'type', 'Type'),
-                            new TextField('', 'vaginaColor', 'Color'),
-                            new IntegerField('', 'clits', 'Clits', null, 1),
-                            new FloatField('', 'fullness', 'Fullness', null, 0),
-                            new IntegerField('', 'shrinkCounter', 'Shrink Counter', null, 0),
-                            new SwitchField('', 'hymen', 'Hymen'),
-                            new FlagField('BodyFlag', '', 'flags', 'Flags') //todo flags
-                            //todo piercing
-                        ])
-                    ]),
-                ])
-            ]));
-            // #endregion
-
-            // #region Perks
-            $('#tabPerks').append(
-                //document.createElement('p').textContent = 'Needs serious ui work but works behind the scenes (fyi if you use this in its current state some perks will disappear after removed)',
-                new PerkField(char, 'perks')
-            );
-            // #endregion
+            $('#tabGame').append(displayGame());
+            $('#tabStats').append(displayStats());
+            $('#tabHead').append(displayHead());
+            $('#tabBody').append(displayBody());
+            $('#tabCrotch').append(displayCrotch());
+            $('#tabPerks').append(displayPerks());
 
             const paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuffSEEE = document.createElement('p');
             paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuffSEEE.textContent = 'NOTE: as of now most status effects show here and get added fine but their props like visibility/icon/iconcolor etc are not correct cause i didnt get to those yet '
@@ -551,7 +189,7 @@
             // #region Status Effects
             $('#tabStatusEffects').append(
                 paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuffSEEE,
-                new SeField(char, 'statusEffects')
+                displayStatusEffects()
             );
             // #endregion
 
@@ -562,7 +200,7 @@
 
             $('#tabFlags').append(
                 paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuff,
-                new FlagContainer()
+                displayFlags()
             );
             // #endregion
 
@@ -578,14 +216,8 @@
             );
             // #endregion
 
-            // #endregion
-
             $('#content').show();
         }
-    </script>
-
-    <script type="text/html" id="test-template">
-        <input data-bind="value: breasts">
     </script>
 </head>
 
@@ -619,21 +251,22 @@
                 <div id="divToolbar" class="bg-info row g-0">
                     <div class="col p-2">
                         <div>
-                            <label class="visually-hidden" for="saveName">Save File Name</label>
-                            <input type="text" class="form-control form-control-sm" id="saveName" disabled />
+                            <label class="visually-hidden" for="inputSaveName">Save File Name</label>
+                            <input type="text" class="form-control form-control-sm" id="inputSaveName" disabled data-bind="textInput: $data.saveName, enable: $data.saveLoaded" />
                         </div>
                     </div>
                     <div class="col-sm-auto p-2 text-center">
                         <div id="divLoadFile" class="d-inline-block">
                             <button type="button" class="btn btn-sm btn-primary" onclick="loadFile.click()">
-                                <!--<span id="aaaa" class="spinner-border spinner-border-sm" role="status" data-bind="visible: isLoading"></span>-->
-                                Load file
+                                <i class="fa-solid fa-upload"></i>  Load file
                             </button>
                             <label class="visually-hidden" for="loadFile">Load File</label>
                             <input class="form-control" type="file" id="loadFile" hidden="hidden">
                         </div>
-                        <div id="saveFileContainer" class="d-inline-block">
-                            <button id="saveFile" type="button" class="btn btn-sm btn-primary" disabled>Save file</button>
+                        <div class="d-inline-block">
+                            <button id="btnSaveFile" type="button" class="btn btn-sm btn-primary" disabled data-bind="enable: $data.saveLoaded">
+                                <i class="fa-solid fa-floppy-disk"></i>  Save file
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -648,7 +281,7 @@
         <div class="text-light pb-2 px-3 w-100">
             <label class="label-sm" for="editField-character">Character</label>
             <select id="editField-character" class="form-select form-select-sm" disabled
-                    data-bind="options: chars, optionsText: 'name', value: selectedCharacter, enable: isEnabled"></select>
+                    data-bind="options: chars, optionsText: 'name', value: selectedCharacter, enable: saveLoaded"></select>
         </div>
 
         <div id="editor" class="mt-3">
@@ -681,7 +314,7 @@
                     <button class="nav-link" id="navInventory" data-bs-toggle="tab" data-bs-target="#tabInventory" type="button" role="tab" aria-controls="tabInventory" aria-selected="false">Inventory</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link text-nowrap" id="navKeyItems" data-bs-toggle="tab" data-bs-target="#tabKeyItems" type="button" role="tab" aria-controls="tabKeyItems" aria-selected="false">Key Items</button>
+                    <button class="nav-link" id="navKeyItems" data-bs-toggle="tab" data-bs-target="#tabKeyItems" type="button" role="tab" aria-controls="tabKeyItems" aria-selected="false">Key Items</button>
                 </li>
             </ul>
             <div class="tab-content p-2">

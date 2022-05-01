@@ -1,9 +1,6 @@
 class Tab {
-    constructor(rows, context = null) {
+    constructor(rows) {
         this.root = document.createElement('div');
-        if (context) {
-            //this.root.dataset.bind = 'with: ' + context;
-        }
 
         if (rows.length) {
             rows.forEach(r => this.root.appendChild(r));
@@ -30,39 +27,7 @@ class Row {
 }
 
 class Group {
-    constructor(titleText, fields, context = null) {
-        this.root = document.createElement('div');
-        if (context) {
-            //this.root.dataset.bind = 'with: ' + context;
-        }
-
-        if (titleText) {
-            this.titleElement = document.createElement('h3');
-            this.titleElement.textContent = titleText;
-            const hr = document.createElement('hr');
-            this.root.appendChild(this.titleElement);
-            this.root.appendChild(hr);
-        }
-
-        if (fields.length) {
-            fields.forEach(f => {
-                if (f.className.includes('nested-group')) {
-                    //if (fields.indexOf(f) == fields.length - 1 || !fields[fields.indexOf(f) + 1].className.includes('nested-group')) {
-                    //    for (var i = 0; i < f.children.length; i++) {
-                    //        f.children[i].className += ' mb-0';
-                    //    }
-                    //}
-                }
-                this.root.appendChild(f);
-            });
-        }
-
-        return this.root;
-    }
-}
-
-class ArrayGroup {
-    constructor(titleText, func, fields) {
+    constructor(titleText, fields, ret = true) {
         this.root = document.createElement('div');
 
         this.titleElement = document.createElement('h3');
@@ -71,32 +36,35 @@ class ArrayGroup {
         this.root.appendChild(this.titleElement);
         this.root.appendChild(hr);
 
+        if (fields.length) {
+            fields.forEach(f => { this.root.appendChild(f); });
+        }
+
+        if (ret) {
+            return this.root;
+        }
+    }
+}
+
+class ArrayGroup extends Group {
+    constructor(titleText, func, fields) {
+        super(titleText, fields, false);
         this.addButton = document.createElement('button');
         this.addButton.innerHTML = 'Add <i class="fa-solid fa-plus"></i>';
         this.addButton.type = 'button';
         this.addButton.disabled = true;
         this.addButton.className = 'btn btn-success btn-sm float-end text-white';
-        this.addButton.dataset.bind = 'click: $root.' + func + ', enable: $root.isEnabled';
+        this.addButton.dataset.bind = 'click: $root.' + func + ', enable: $root.saveLoaded';
         this.titleElement.appendChild(this.addButton);
-
-        if (fields.length) {
-            fields.forEach(f => {
-                this.root.appendChild(f);
-            });
-        }
 
         return this.root;
     }
 }
 
 class NestedGroup {
-    constructor(titleText, fields, context = null) {
+    constructor(titleText, fields) {
         this.root = document.createElement('div');
         this.root.className = 'row g-0 nested-group my-n3';
-
-        if (context) {
-            //this.root.dataset.bind = 'with: ' + context;
-        }
 
         if (titleText) {
             const titleElement = document.createElement('h5');
@@ -112,10 +80,6 @@ class NestedGroup {
                 this.root.appendChild(f);
             });
         }
-
-        //if (!titleText && fields.length) {
-        //    this.root.children[0].className += ' mt-0';
-        //}
 
         return this.root;
     }

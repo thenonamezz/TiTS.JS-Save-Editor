@@ -1,0 +1,15 @@
+{
+  "name": "tits.js-save-editor-puppeteer",
+  "version": "1.0.0",
+  "description": "Program used to get the game data used in the save editor",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "start-5",
+  "license": "ISC",
+  "dependencies": {
+    "prettier": "^2.6.2",
+    "puppeteer": "^13.7.0"
+  }
+}

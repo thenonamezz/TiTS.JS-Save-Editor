@@ -1,19 +1,19 @@
 class StorageClass {
     constructor() {
         this.classInstance = "StorageClass";
-        this.combatOnly = false;
-        this.hidden = true;
-        this.iconName = "";
-        this.iconShade = "var(--textColor)";
-        this.minutesLeft = 0;
         this.neverSerialize = false;
+        this.version = 1;
         this.storageName = "";
-        this.toolTip = "";
         this.value1 = 0;
         this.value2 = 0;
         this.value3 = 0;
         this.value4 = 0;
-        this.version = 1;
+        this.hidden = true;
+        this.iconName = "";
+        this.toolTip = "";
+        this.combatOnly = false;
+        this.minutesLeft = 0;
+        this.iconShade = "var(--textColor)";
     }
 }
 

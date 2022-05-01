@@ -1,7 +1,4 @@
-// ko is cool, but it feels old and is finicky,
-// still, a lot better than whatever the hell i was doing before and opens up more potential stuff
-
-var vmmapping = {
+window.loadMapping = {
     'flags': {
         create: function (options) {
             if (options.data.hasOwnProperty('pathOverrides')) {
@@ -17,96 +14,95 @@ var vmmapping = {
 var ViewModel = function (data) {
     var self = this;
 
-    ko.mapping.fromJS(data, vmmapping, self);
+    self.saveLoaded = ko.observable(false);
+    self.busy = ko.observable(false);
 
-    self.selectedCharacter = ko.observable();
+    self.saveName = ko.observable('');
+    self.originalSaveName = ko.observable('');
 
-    self.chars = ko.computed(function () {
-        return Object.keys(self.characters).map(key => ({
-            name: key,
-            obj: self.characters[key]
-        }))
-    }, self);
-
-    self.isPC = ko.computed(function () {
-        return self.selectedCharacter() && self.selectedCharacter().name == 'PC';
-    }, self);
+    self.save = {};
+    ko.mapping.fromJS(data, loadMapping, self.save);
 
     self.getGlobal = function (path) {
-        var obj = globalKeys;
+        var obj = GlobalKeys;
         for (var i = 0, path = path.split('.'), len = path.length; i < len; i++) {
             obj = obj[path[i]];
         };
         return obj;
     };
 
-    //self.originalFlags = self.flags().slice();
+    // #region Character
+    self.selectedCharacter = ko.observable();
 
-    //self.flags = ko.computed(function () {
-    //    if (self.selectedCharacter()) {
-    //        return new ko.observableDictionary();
-    //    }
-    //}, self);
+    self.chars = ko.computed(function () {
+        return Object.keys(self.save.characters).map(key => ({
+            name: key,
+            obj: self.save.characters[key]
+        }));
+    }, self);
 
-    //self.getPerks = ko.computed(function () {
-    self.internal_perks = ko.computed(function () {
+    self.isPC = ko.computed(function () {
+        return self.selectedCharacter() && self.selectedCharacter().name == 'PC';
+    }, self);
+    // #endregion
+
+    // #region Perks
+    self.getPerks = ko.computed(function () {
         if (self.selectedCharacter()) {
             // even though the objects look the same, due to reference the char perks dont get counted as "owned" by the character,
             // this fixes that and adds any perks that are not present/stored internally in the editor data
+            let vmPerks = ko.observableArray(self.perkList());
+            let charPerks = self.selectedCharacter().obj.perks;
 
-            let dPerks = ko.observableArray(self.perksFromData());
-            let cPerks = self.selectedCharacter().obj.perks;
-
-            for (var i = 0; i < cPerks().length; i++) {
-                dPerks.remove(function (perk) {
-                    return perk.storageName() === cPerks()[i].storageName();
-                });
+            for (var i = 0; i < charPerks().length; i++) {
+                vmPerks.remove(p => p.storageName() === charPerks()[i].storageName());
             }
 
-            self.perksFromData = ko.observableArray(ko.observableArray(cPerks().concat(dPerks())).sorted(function (l, r) {
-                return l.storageName() === r.storageName() ? 0
-                    : l.storageName() < r.storageName() ? -1
+            self.perkList = ko.observableArray(ko.observableArray(charPerks().concat(vmPerks())).sorted(function (p1, p2) {
+                return p1.storageName() === p2.storageName() ? 0
+                    : p1.storageName() < p2.storageName() ? -1
                         : 1;
             }));
 
-            //self.unknownPerks(perksChar().filter(p => !perksInternal().includes(p)));
-
-            //return perks;
-            return self.perksFromData;
+            return self.perkList;
         }
     }, self);
+
+    self.perkList = ko.mapping.fromJS(Perks);
 
     self.hasPerk = function (data) {
         return self.selectedCharacter().obj.perks().includes(data);
     }
+    // #endregion
 
-    self.perksFromData = ko.mapping.fromJS(Perks);
-
-    self.internal_se = ko.computed(function () {
+    // #region Status Effects
+    self.getStatusEffects = ko.computed(function () {
         if (self.selectedCharacter()) {
-            let dSe = ko.observableArray(self.seFromData());
-            let cSe = self.selectedCharacter().obj.statusEffects;
+            let vmStatusEffects = ko.observableArray(self.statusEfectList());
+            let charStatusEffects = self.selectedCharacter().obj.statusEffects;
 
-            for (var i = 0; i < cSe().length; i++) {
-                dSe.remove(function (se) {
-                    return se.storageName() === cSe()[i].storageName();
-                });
+            for (var i = 0; i < charStatusEffects().length; i++) {
+                vmStatusEffects.remove(se => se.storageName() === charStatusEffects()[i].storageName());
             }
 
-            self.seFromData = ko.observableArray(ko.observableArray(cSe().concat(dSe())).sorted(function (l, r) {
-                return l.storageName() === r.storageName() ? 0
-                    : l.storageName() < r.storageName() ? -1
+            self.statusEfectList = ko.observableArray(ko.observableArray(charStatusEffects().concat(vmStatusEffects())).sorted(function (s1, s2) {
+                return s1.storageName() === s2.storageName() ? 0
+                    : s1.storageName() < s2.storageName() ? -1
                         : 1;
             }));
 
-            return self.seFromData;
+            return self.statusEfectList;
         }
     }, self);
 
-    self.seFromData = ko.mapping.fromJS(se);
+    self.statusEfectList = ko.mapping.fromJS(StatusEffects);
 
-    self.isEnabled = ko.observable(false);
+    self.hasStatusEffect = function (data) {
+        return self.selectedCharacter().obj.statusEffects().includes(data);
+    }
+    // #endregion
 
+    // #region OnChanged
     self.nameChanged = function (data, event) {
         const char = self.selectedCharacter().obj;
         const name = event.target.value;
@@ -115,8 +111,8 @@ var ViewModel = function (data) {
             char.uniqueName(name);
         }
         if (self.isPC()) {
-            self.gameInstanceInfo.name(name);
-            const mailObj = self.mailState.mails;
+            self.save.gameInstanceInfo.name(name);
+            const mailObj = self.save.mailState.mails;
             for (const [key] of Object.entries(mailObj)) {
                 const mail = mailObj[key];
                 if (mail.hasOwnProperty('ToCache')) {
@@ -126,6 +122,20 @@ var ViewModel = function (data) {
         }
     }
 
+    self.emailChanged = function (data, event) {
+        const email = event.target.value;
+        const mailObj = self.save.mailState.mails;
+
+        for (const [key] of Object.entries(mailObj)) {
+            const mail = mailObj[key];
+            if (mail.hasOwnProperty('ToAddressCache')) {
+                mail['ToAddressCache'] = email + '@SteeleTech.corp';
+            }
+        }
+    }
+    // #endregion
+
+    // #region Validation
     self.validateNumberInput = function (data, event) {
         const input = event.target;
         const type = !!input.pattern ? 'int' : 'float';
@@ -150,24 +160,14 @@ var ViewModel = function (data) {
             alert(type === 'int' ? 'Value must be an integer (whole number)' : 'Value must be a number');
         }
     }
+    // #endregion
 
-    self.emailChanged = function (data, event) {
-        const email = event.target.value;
-        const mailObj = self.mailState.mails;
-
-        for (const [key] of Object.entries(mailObj)) {
-            const mail = mailObj[key];
-            if (mail.hasOwnProperty('ToAddressCache')) {
-                mail['ToAddressCache'] = email + '@SteeleTech.corp';
-            }
-        }
-    }
-
+    // #region Arrays
     self.getPenisName = function (index) {
         const i = self.selectedCharacter().obj.cocks()[index()];
         const color = i.cockColor();
         const len = +i.cLengthRaw() + +i.cLengthMod();
-        const type = globalKeys.BodyType.find(t => t.value == i.cType()).name.toLowerCase();
+        const type = GlobalKeys.BodyType.find(t => t.value == i.cType()).name.toLowerCase();
         return 'a ' + color + ' ' + len + '" ' + type + ' penis';
     }
 
@@ -182,7 +182,7 @@ var ViewModel = function (data) {
     self.getVaginaName = function (index) {
         const i = self.selectedCharacter().obj.vaginas()[index()];
         const color = i.vaginaColor();
-        const type = globalKeys.BodyType.find(t => t.value == i.type()).name.toLowerCase();
+        const type = GlobalKeys.BodyType.find(t => t.value == i.type()).name.toLowerCase();
         return 'a ' + color + ' ' + type + ' vagina';
     }
 
@@ -208,18 +208,7 @@ var ViewModel = function (data) {
     self.removeBreastRow = function (data) {
         self.selectedCharacter().obj.breastRows.remove(data);
     }
-
-    //self.getFlags = function () {
-    //    //return ko.mapping.fromJS(Flags);
-    //    return Flags;
-    //}
-
-    self.getFlags = new ko.observableDictionary(Flags)
-
-    self.saveFlags = new ko.observableDictionary(self.flags)
-
-
-    self.isLoading = ko.observable(false);
+    // #endregion
 }
 
 
@@ -242,48 +231,5 @@ ko.bindingHandlers.numberInput = {
     },
     update: function (element, valueAccessor, allBindingsAccessor) {
         element.value = valueAccessor()();
-    }
-};
-
-ko.bindingHandlers.keyvalue = {
-    makeTemplateValueAccessor: function (valueAccessor) {
-        return function () {
-            var values = valueAccessor();
-            var array = [];
-            for (var key in values)
-                array.push({ key: key, value: values[key] });
-            return array;
-        };
-    },
-    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-        return ko.bindingHandlers.foreach.init(element, ko.bindingHandlers.keyvalue.makeTemplateValueAccessor(valueAccessor));
-    },
-    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-        return ko.bindingHandlers.foreach.update(element, ko.bindingHandlers.keyvalue.makeTemplateValueAccessor(valueAccessor), allBindings, viewModel, bindingContext);
-    }
-};
-
-ko.bindingHandlers.flags = {
-    makeTemplateValueAccessor: function (valueAccessor) {
-        return function () {
-            var values = valueAccessor();
-            var array = [];
-            for (var key in values)
-                array.push({ key: key, value: values[key] });
-            return array;
-        };
-    },
-    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-
-        var a = '';
-
-        return ko.bindingHandlers.foreach.init(element, ko.bindingHandlers.keyvalue.makeTemplateValueAccessor(valueAccessor));
-    },
-    update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-
-        var a = '';
-
-
-        return ko.bindingHandlers.foreach.update(element, ko.bindingHandlers.keyvalue.makeTemplateValueAccessor(valueAccessor), allBindings, viewModel, bindingContext);
     }
 };
