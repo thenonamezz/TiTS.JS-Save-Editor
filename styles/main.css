@@ -181,16 +181,32 @@ input[type=number] {
 }
 
 .text-muted {
-    color: #bbb !important;
+    color: #ddd !important;
 }
 
-.perk-switch {
+.storage-switch {
     height: 1.1rem !important;
     width: 2.2rem !important;
 }
 
 .nav-item button {
     white-space: nowrap !important;
+}
+
+.btn-xs {
+    font-size: 0.7rem !important;
+}
+
+.storage-item {
+    width: 50%;
+}
+
+.form-check-input:not(:disabled) {
+    cursor: pointer !important;
+}
+
+.p-sm {
+    font-size: 0.9rem !important;
 }
 
 /*input:disabled, input:disabled ~ label, select:disabled, select:disabled ~ label, input[type=checkbox]:disabled {

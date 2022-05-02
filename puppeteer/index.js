@@ -350,6 +350,32 @@ const fs = require('fs');
                         }
                     }
 
+                    if (nthIndex(match, '"', 3) > 0) {
+                        statusEffect.iconName = match.slice(nthIndex(match, '"', 3) + 1, nthIndex(match, '"', 4));
+                    }
+
+                    if (nthIndex(match, ',', 5) > 0) {
+                        let strBool = '';
+                        let bool = false;
+                        if (nthIndex(match, ',', 6) > 0) {
+                            strBool = match.slice(nthIndex(match, ',', 5) + 1, nthIndex(match, ',', 6));
+                        }
+                        else {
+                            strBool = match.slice(nthIndex(match, ',', 5) + 1, nthIndex(match, ')', 1) - 1);
+
+                        }
+
+                        if (strBool === '!0' || strBool === '!1') {
+                            bool = strBool === '!0';
+                        }
+                        if (strBool === 'true' || strBool === 'false') {
+                            bool = strBool === 'true';
+                        }
+
+                        statusEffect.hidden = bool;
+                    }
+
+
                     statusEffects.push(statusEffect);
                 }
             });

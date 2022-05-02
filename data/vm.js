@@ -47,26 +47,29 @@ var ViewModel = function (data) {
     // #endregion
 
     // #region Perks
-    self.getPerks = ko.computed(function () {
+    self.getPerks = function () {
         if (self.selectedCharacter()) {
-            // even though the objects look the same, due to reference the char perks dont get counted as "owned" by the character,
-            // this fixes that and adds any perks that are not present/stored internally in the editor data
-            let vmPerks = ko.observableArray(self.perkList());
+            // two things are happening here, one, ensuring that characters don't have objcts that reference each other,
+            // second, adding any unknown storage to the pool, i haven't found a better way to do this yet
+
+            let vmPerks = ko.mapping.fromJS(ko.mapping.toJS(self.perkList));
             let charPerks = self.selectedCharacter().obj.perks;
 
             for (var i = 0; i < charPerks().length; i++) {
+                let perk = vmPerks().find(p => p.storageName() === charPerks()[i].storageName());
+                if (!perk) {
+                    let cPerk = ko.mapping.fromJS(ko.mapping.toJS(charPerks()[i]));
+                    for (var idx = 1; idx < 5; idx++) {
+                        cPerk['value' + idx](0);
+                    }
+                    self.perkList.push(cPerk);
+                }
                 vmPerks.remove(p => p.storageName() === charPerks()[i].storageName());
             }
 
-            self.perkList = ko.observableArray(ko.observableArray(charPerks().concat(vmPerks())).sorted(function (p1, p2) {
-                return p1.storageName() === p2.storageName() ? 0
-                    : p1.storageName() < p2.storageName() ? -1
-                        : 1;
-            }));
-
-            return self.perkList;
+            return charPerks().concat(vmPerks()).sort((p1, p2) => p1.storageName().localeCompare(p2.storageName()));
         }
-    }, self);
+    }
 
     self.perkList = ko.mapping.fromJS(Perks);
 
@@ -76,31 +79,41 @@ var ViewModel = function (data) {
     // #endregion
 
     // #region Status Effects
-    self.getStatusEffects = ko.computed(function () {
+    self.getStatusEffects = function () {
         if (self.selectedCharacter()) {
-            let vmStatusEffects = ko.observableArray(self.statusEfectList());
+            // two things are happening here, one, ensuring that characters don't have objcts that reference each other,
+            // second, adding any unknown storage to the pool, i haven't found a better way to do this yet
+
+            let vmStatusEffects = ko.mapping.fromJS(ko.mapping.toJS(self.statusEffectList));
             let charStatusEffects = self.selectedCharacter().obj.statusEffects;
 
             for (var i = 0; i < charStatusEffects().length; i++) {
-                vmStatusEffects.remove(se => se.storageName() === charStatusEffects()[i].storageName());
+                let statusEffect = vmStatusEffects().find(p => p.storageName() === charStatusEffects()[i].storageName());
+                if (!statusEffect) {
+                    let sEffect = ko.mapping.fromJS(ko.mapping.toJS(charStatusEffects()[i]));
+                    for (var idx = 1; idx < 5; idx++) {
+                        sEffect['value' + idx](0);
+                    }
+                    sEffect.minutesLeft(0);
+                    self.statusEffectList.push(sEffect);
+                }
+                vmStatusEffects.remove(p => p.storageName() === charStatusEffects()[i].storageName());
             }
 
-            self.statusEfectList = ko.observableArray(ko.observableArray(charStatusEffects().concat(vmStatusEffects())).sorted(function (s1, s2) {
-                return s1.storageName() === s2.storageName() ? 0
-                    : s1.storageName() < s2.storageName() ? -1
-                        : 1;
-            }));
-
-            return self.statusEfectList;
+            return charStatusEffects().concat(vmStatusEffects()).sort((s1, s2) => s1.storageName().localeCompare(s2.storageName()));
         }
-    }, self);
+    }
 
-    self.statusEfectList = ko.mapping.fromJS(StatusEffects);
+    self.statusEffectList = ko.mapping.fromJS(StatusEffects);
 
     self.hasStatusEffect = function (data) {
         return self.selectedCharacter().obj.statusEffects().includes(data);
     }
     // #endregion
+
+    self.expandStorage = function (data, event) {
+        $(event.target).next().collapse('toggle');
+    }
 
     // #region OnChanged
     self.nameChanged = function (data, event) {

@@ -38,7 +38,7 @@
     <script>
         //in case they switch to using a custom extension at some point like they do with coc2
         const fileExtension = '.json';
-        const minFileNameLenght = 1;
+        const minFileNameLength = 1;
 
         $(() => {
             $('#toolbarContainer').collapse();
@@ -159,7 +159,7 @@
                 // alert('File name must be ' + requiredLength + ' character' + (requiredLength > 1 ? 's' : '') + ' or longer');                //
 
                 const name = $(this).val();
-                if (name.length <= minFileNameLenght) {
+                if (name.length <= minFileNameLength) {
                     vm.saveName(vm.originalSaveName());
                 }
             });
@@ -183,23 +183,23 @@
             $('#tabCrotch').append(displayCrotch());
             $('#tabPerks').append(displayPerks());
 
-            const paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuffSEEE = document.createElement('p');
-            paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuffSEEE.textContent = 'NOTE: as of now most status effects show here and get added fine but their props like visibility/icon/iconcolor etc are not correct cause i didnt get to those yet '
-            paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuffSEEE.className = 'pb-3';
+            const pDisc = document.createElement('p');
+            pDisc.textContent = 'slow af atm'
+            pDisc.className = 'pb-3';
             // #region Status Effects
             $('#tabStatusEffects').append(
-                paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuffSEEE,
+                pDisc,
                 displayStatusEffects()
             );
             // #endregion
 
             // #region Flags
-            const paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuff = document.createElement('p');
-            paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuff.textContent = 'doesnt work correctly if you load a save on top of another one, at least not yet'
-            paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuff.className = 'pb-3';
+            const fDisc = document.createElement('p');
+            fDisc.textContent = 'doesnt work correctly if you load a save on top of another one, at least not yet'
+            fDisc.className = 'pb-3';
 
             $('#tabFlags').append(
-                paragraphToExplainStuffAndThingsAboutThisFlagsEditorPartAboutTheSaveOnTopOfAnotherSaveAndStuff,
+                fDisc,
                 displayFlags()
             );
             // #endregion
@@ -220,8 +220,6 @@
         }
     </script>
 </head>
-
-
 
 <body class="bg-secondary text-light">
     <div id="disclaimer" class="container-fluid text-center p-3">
