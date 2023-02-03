@@ -30,6 +30,14 @@ var ViewModel = function (data) {
         };
         return obj;
     };
+    
+    self.getImplant = function (path) {
+        var obj = Implants;
+        for (var i = 0, path = path.split('.'), len = path.length; i < len; i++) {
+            obj = obj[path[i]];
+        };
+        return obj;
+    };
 
     // #region Character
     self.selectedCharacter = ko.observable();
@@ -45,6 +53,17 @@ var ViewModel = function (data) {
         return self.selectedCharacter() && self.selectedCharacter().name == 'PC';
     }, self);
     // #endregion
+
+    self.selectedCharacter.subscribe(function(newValue) {
+        // Makes perk SPEEED
+        self.allPerks = self.getPerks();
+
+        //Makes statuseffects SPEEED
+        self.allStatusEffects = self.getStatusEffects();
+
+        //Makes keyitems SPEEED
+        self.allKeyItems = self.getKeyitems();
+    });
 
     // #region Perks
     self.getPerks = function () {
@@ -76,6 +95,8 @@ var ViewModel = function (data) {
     self.hasPerk = function (data) {
         return self.selectedCharacter().obj.perks().includes(data);
     }
+    
+    self.allPerks = self.getPerks();
     // #endregion
 
     // #region Status Effects
@@ -109,6 +130,42 @@ var ViewModel = function (data) {
     self.hasStatusEffect = function (data) {
         return self.selectedCharacter().obj.statusEffects().includes(data);
     }
+    
+    self.allStatusEffects = self.getStatusEffects();
+    // #endregion
+    
+    // #region Keyitems
+    self.getKeyitems = function () {
+        if (self.selectedCharacter()) {
+            // two things are happening here, one, ensuring that characters don't have objcts that reference each other,
+            // second, adding any unknown storage to the pool, i haven't found a better way to do this yet
+
+            let vmKeyitems = ko.mapping.fromJS(ko.mapping.toJS(self.keyitemList));
+            let charKeyitems = self.selectedCharacter().obj.keyItems;
+
+            for (var i = 0; i < charKeyitems().length; i++) {
+                let keyitem = vmKeyitems().find(p => p.storageName() === charKeyitems()[i].storageName());
+                if (!keyitem) {
+                    let cKeyitem = ko.mapping.fromJS(ko.mapping.toJS(charKeyitems()[i]));
+                    for (var idx = 1; idx < 5; idx++) {
+                        cKeyitem['value' + idx](0);
+                    }
+                    self.keyitemList.push(cKeyitem);
+                }
+                vmKeyitems.remove(p => p.storageName() === charKeyitems()[i].storageName());
+            }
+
+            return charKeyitems().concat(vmKeyitems()).sort((p1, p2) => p1.storageName().localeCompare(p2.storageName()));
+        }
+    }
+
+    self.keyitemList = ko.mapping.fromJS(KeyItems);
+
+    self.hasKeyitem = function (data) {
+        return self.selectedCharacter().obj.keyItems().includes(data);
+    }
+
+    self.allKeyItems = self.getKeyitems();
     // #endregion
 
     self.expandStorage = function (data, event) {

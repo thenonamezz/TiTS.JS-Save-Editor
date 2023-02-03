@@ -33,6 +33,23 @@ class Field {
     }
 }
 
+class ReadOnlyTextField {
+    constructor(label, extraClass = '') {
+
+        this.content = document.createElement('div');
+        this.content.className = 'text-light my-3 ' + extraClass;
+
+        this.label = document.createElement('label');
+        this.label.className = 'label-sm';
+
+        this.label.innerText = label;
+
+        this.content.appendChild(this.label);
+
+        return this.content;
+    }
+}
+
 class TextField extends Field {
     constructor(obj, key, label, suffixText = null, onChanged = null, pcOnly = false) {
         super();
@@ -124,16 +141,17 @@ class FloatField extends Field {
 }
 
 class SelectField extends Field {
-    constructor(path, obj, key, label, onChanged = null, pcOnly = false) {
+    constructor(path, obj, key, label, onChanged = null, pcOnly = false, optionsValue = 'getGlobal') {
         super();
         this.content.className += ' editor-select';
+        this.content.id = 'editSelect-' + key;
 
         this.label.innerText = label;
         this.resolveLabel(key, label);
-
+        
         this.select = document.createElement('select');
         this.select.className = 'form-select form-select-sm';
-        this.select.dataset.bind = `options: $root.getGlobal("` + path + `"),
+        this.select.dataset.bind = `options: $root.` + optionsValue + `("` + path + `"),
                                     optionsText: 'name',
                                     optionsValue: 'value',
                                     value: ` + obj + (obj ? '.' : '') + key + `,

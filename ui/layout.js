@@ -67,6 +67,8 @@ class NestedGroup {
         this.root.className = 'row g-0 nested-group my-n3';
 
         if (titleText) {
+            this.root.id = titleText;
+
             const titleElement = document.createElement('h5');
             titleElement.textContent = titleText;
             const hr = document.createElement('hr');
@@ -82,5 +84,58 @@ class NestedGroup {
         }
 
         return this.root;
+    }
+}
+
+class AccordionGroup {
+    constructor(titleText, fields) {
+        const expanded = false;
+
+        this.content = document.createElement('div');
+        this.content.className = 'accordion text-light my-3 w-100 pt-2';
+        this.content.id = titleText;
+
+        this.item = document.createElement('div');
+        this.item.className = 'accordion-item';
+        this.header = document.createElement('h6');
+        this.header.className = 'accordion-header';
+        this.header.id = this.content.id + '-header';
+
+        this.button = document.createElement('button');
+        this.button.className = 'accordion-button' + (expanded ? '' : ' collapsed');
+        this.button.type = 'button';
+        this.button.setAttribute('data-bs-toggle', 'collapse');
+        this.button.setAttribute('aria-expanded', expanded);
+        this.button.textContent = titleText;
+
+        this.bodyContainer = document.createElement('div');
+        this.bodyContainer.className = 'accordion-collapse collapse' + (expanded ? ' show' : '');
+        this.bodyContainer.setAttribute('aria-labelledby', '#' + this.header.id);
+        this.bodyContainer.setAttribute('data-bs-parent', '#' + this.header.id);
+        this.bodyContainer.id = this.content.id + '-body';
+
+        this.button.setAttribute('aria-controls', this.bodyContainer.id);
+        this.button.setAttribute('data-bs-target', '#' + this.bodyContainer.id);
+
+        this.body = document.createElement('div');
+        this.body.className = 'accordion-body d-flex flex-wrap';
+
+        if (fields.length) {
+            fields.forEach(f => {
+                f.className += ' col-6 px-1';
+                this.body.appendChild(f);
+            });
+        }
+
+        this.header.appendChild(this.button);
+        this.bodyContainer.appendChild(this.body);
+
+        this.item.appendChild(this.header);
+        this.item.appendChild(this.bodyContainer);
+
+        this.content.appendChild(this.item);
+        
+
+        return this.content;
     }
 }

@@ -18,7 +18,11 @@ const fs = require('fs');
     }
 
     var browser_start = Date.now();
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        headless: false, 
+        devtools: true
+        // slowMo: 250
+    });
     const page = await browser.newPage();
 
     var urls = [];
@@ -27,11 +31,17 @@ const fs = require('fs');
         const url = response.url();
         if (url.endsWith('.js')) {
             urls.push(url);
-            contents.push(await response.text());
+            try {
+                var responseText = await response.text();
+                contents.push(responseText);
+            } catch (err) {
+                console.log(err)
+            }
         }
     });
 
     try {
+
         console.log('loading game');
         await page.goto('https://www.fenoxo.com/play/TiTS/release/', { timeout: 0 });
         console.log('game loaded');
@@ -91,6 +101,16 @@ const fs = require('fs');
                     return validTypes;
                 }
 
+                function getValidFor(bodyPart, type, bodyPartArr) {
+                    var validTypes = [];
+                    var propName = 'VALID_' + bodyPart + type;
+                    var typeArr = getObjectRecursive(window.GLOBAL, propName);
+                    for (var i = 0; i < typeArr.length; i++) {
+                        validTypes.push(bodyPartArr.find(f => f.value == typeArr[i]));
+                    }
+                    return validTypes;
+                }
+
                 function getGlobalsByPrefix(prefix) {
                     return Object.keys(window.GLOBAL)
                         .filter(key => key.startsWith(prefix))
@@ -142,13 +162,21 @@ const fs = require('fs');
                     start('getting valid body flags');
                     const ValidFlags =
                     {
+                        Areola: getValidFlagsFor("AREOLA", BodyFlag),
                         Face: getValidFlagsFor("FACE", BodyFlag),
                         Tongue: getValidFlagsFor("TONGUE", BodyFlag),
                         Arm: getValidFlagsFor("ARM", BodyFlag),
                         Leg: getValidFlagsFor("LEG", BodyFlag),
                         Tail: getValidFlagsFor("TAIL", BodyFlag),
-                        Skin: getValidFlagsFor("SKIN", BodyFlag)
+                        Skin: getValidFlagsFor("SKIN", BodyFlag),
+                        Cock: getValidFlagsFor("COCK", BodyFlag),
+                        Vagina: getValidFlagsFor("VAGINA", BodyFlag),
+                        Tailcunt: getValidFlagsFor("VAGINA", BodyFlag)
                     };
+
+                    // FenCo please put these into actual flagsarrays
+                    ValidFlags.Tail.push({name: "Parasitic",value: 55});
+                    ValidFlags.Tailcunt.push({name: "Tailcunt",value: 42});
 
                     start('getting valid body types');
                     const ValidTypes =
@@ -159,13 +187,18 @@ const fs = require('fs');
                         Ear: getValidTypesFor("EAR", BodyType),
                         Arm: getValidTypesFor("ARM", BodyType),
                         Leg: getValidTypesFor("LEG", BodyType),
-                        Antennae: getValidTypesFor("ANTENNAE", BodyType), //kinda random but according to the game "human" is a valid antennae type????
+                        Antennae: getValidTypesFor("ANTENNAE", BodyType),
                         Horn: getValidTypesFor("HORN", BodyType),
                         Wing: getValidTypesFor("WING", BodyType),
-                        Tail: getValidTypesFor("TAIL", BodyType)
+                        Tail: getValidTypesFor("TAIL", BodyType),
+                        Cock: getValidTypesFor("COCK", BodyType),
+                        Vagina: getValidTypesFor("VAGINA", BodyType),
+                        Dicknipple: getValidTypesFor("DICKNIPPLE", BodyType),
+                        TailGenital: getValidFor("TAIL_GENITAL", "_ARGS", BodyType)
                     };
+                    //FenCo, splitting TailGenital up into TailCock and TailCunt would make stuff easier
 
-                    //todo stuff
+
 
                     globalsObj = {
                         Class, BodyFlag, BodyType, TailGenital, SkinType, NippleType, FluidType, HairType, GenitalSpot, ItemFlag, SexPref,
@@ -173,10 +206,20 @@ const fs = require('fs');
                     };
                 }
 
-                start('stringifying global');
-                const globals = JSON.stringify(globalsObj);
+                // start('stringifying global');
+                // const globals = JSON.stringify(globalsObj);
 
-                return { globals, log };
+                const globals = globalsObj;
+
+                const pantyData = {};
+                const pantyDataArr = window.PantyData.toJSON();
+                for (let i = 0; i < pantyDataArr.length; i++) {
+                    pantyData[pantyDataArr[i][0]] = pantyDataArr[i][1].panty;
+                }
+
+                debugger;
+
+                return { globals, log, pantyData };
             }
             catch (err) {
                 return { log, err: err + '' };
@@ -210,10 +253,38 @@ const fs = require('fs');
             this.value4 = 0;
             this.hidden = true;
             this.iconName = "";
-            this.toolTip = "";
+            this.tooltip = "";
             this.combatOnly = false;
             this.minutesLeft = 0;
             this.iconShade = "var(--textColor)";
+        }
+    }
+
+    class KeyitemClass {
+        constructor() {
+            this.classInstance = "StorageClass";
+            this.neverSerialize = false;
+            this.version = 1;
+            this.storageName = "";
+            this.value1 = 0;
+            this.value2 = 0;
+            this.value3 = 0;
+            this.value4 = 0;
+            this.hidden = true;
+            this.iconName = "";
+            this.tooltip = "";
+            this.combatOnly = false;
+            this.minutesLeft = 0;
+            this.iconShade = "var(--textColor)";
+        }
+    }
+
+    class hairClass {
+        constructor() {
+            this.displayName = "";
+            this.name = "";
+            this.desc = "";
+            this.extra = "";
         }
     }
 
@@ -237,6 +308,36 @@ const fs = require('fs');
             }
 
             value = !isNaN(parseFloat(value)) ? parseFloat(value) : 0;
+        }
+        return value;
+    }
+    
+    function getKeyitemVal(str, num) {
+        var value = 0;
+        if (nthIndex(str, ',', num) > 0) {
+            if (nthIndex(str, ',', num + 1) > 0) {
+                value = str.slice(nthIndex(str, ',', num) + 1, nthIndex(str, ',', num + 1));
+            }
+            else {
+                value = str.slice(nthIndex(str, ',', num) + 1, nthIndex(str, ')', 1));
+            }
+
+            value = !isNaN(parseFloat(value)) ? parseFloat(value) : 0;
+        }
+        return value;
+    }
+    
+    function getHairVal(str, num) {
+        var value = 0;
+        if (nthIndex(str, '",', num) > 0) {
+            if (nthIndex(str, '",', num + 1) > 0) {
+                value = str.slice(nthIndex(str, '",', num) + 3, nthIndex(str, '",', num + 1));
+            }
+            else {
+                value = str.slice(nthIndex(str, '",', num) + 3, nthIndex(str, '",', 1));
+            }
+        } else {
+            value = str.slice(nthIndex(str, '"', num) + 2, nthIndex(str, '","', 1));
         }
         return value;
     }
@@ -279,7 +380,7 @@ const fs = require('fs');
     for (var index = 0; index < contents.length; ++index) {
         var content = contents[index];
         const regex = /\.(create|has)Perk\("([\S ][^)]+)\)*/g
-
+        
         var m;
         while ((m = regex.exec(content)) !== null) {
             if (m.index === regex.lastIndex) {
@@ -297,7 +398,7 @@ const fs = require('fs');
                     perk.value4 = getPerkVal(match, 4);
 
                     if (nthIndex(match, '"', 3) > 0) {
-                        perk.toolTip = match.slice(nthIndex(match, '"', 3) + 1, nthIndex(match, ')', 1) - 1);
+                        perk.tooltip = match.slice(nthIndex(match, '"', 3) + 1, nthIndex(match, ')', 1) - 1);
                     }
 
                     perks.push(perk);
@@ -308,6 +409,147 @@ const fs = require('fs');
     perks = perks.filter((v, i, a) => a.findIndex(v2 => (v2.storageName === v.storageName)) === i).sort();
     var perks_end = Date.now();
     console.log('Retrieved perks, operation took ' + getElapsedTime(perks_start, perks_end) + ' to complete');
+    
+
+    // if somebody from FenCo reads this, please make earflags into an actual flag array in global
+
+    console.log('\nRetrieving earflags');
+    var earFlag_start = Date.now();
+    var earflags = [];
+    for (var index = 0; index < contents.length; ++index) {
+        var content = contents[index];
+        // const regex = /\.(addEarFlag)\(([\S ][^)]+)\)*/g;
+        const regex = /\.(addEarFlag)\((GLOBAL.FLAG_([\S ][^)]+))\)*/g;
+        
+        var m;
+        while ((m = regex.exec(content)) !== null) {
+            if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+
+            m.forEach((match, groupIndex) => {
+                if (groupIndex == 3) {
+                    earflags.push({
+                        name: obj.globals.BodyFlag.find((body) => body.name.toLocaleLowerCase() == match.toLocaleLowerCase()).name,
+                        value: obj.globals.BodyFlag.find((body) => body.name.toLocaleLowerCase() == match.toLocaleLowerCase()).value
+                    });
+                }
+            });
+        }
+    }
+    earflags = earflags.filter((v, i, a) => a.findIndex(v2 => (v2.value === v.value)) === i).sort();
+    var earFlag_end = Date.now();
+    console.log('Retrieved earFlags, operation took ' + getElapsedTime(earFlag_start, earFlag_end) + ' to complete');
+
+    obj.globals.ValidFlags["Ear"] = earflags;
+
+
+    // if somebody from FenCo reads this, please make assFlags into an actual flag array in global
+
+    console.log('\nRetrieving assflags');
+    var assFlag_start = Date.now();
+    var assFlags = [];
+    for (var index = 0; index < contents.length; ++index) {
+        var content = contents[index];
+        // const regex = /\.(addEarFlag)\(([\S ][^)]+)\)*/g;
+        const regex = /(ass.flags)[= ]+(\[(GLOBAL.FLAG_[\S ][^)]+)\])/g;
+        
+        var m;
+        while ((m = regex.exec(content)) !== null) {
+            if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+
+            m.forEach((match, groupIndex) => {
+                if (groupIndex == 2) {
+                    var assFlagArray = match.match(/_([\S ])[^\,\]]*/g);
+
+                    assFlagArray.forEach((item, index, arr) => arr[index] = item.slice(1));
+
+                    for (let i = 0; i < assFlagArray.length; i++) {
+                        assFlags.push({
+                            name: obj.globals.BodyFlag.find((body) => body.name.toLocaleLowerCase() == assFlagArray[i].toLocaleLowerCase()).name,
+                            value: obj.globals.BodyFlag.find((body) => body.name.toLocaleLowerCase() == assFlagArray[i].toLocaleLowerCase()).value
+                        })
+                    }
+                }
+            });
+        }
+    }
+    assFlags = assFlags.filter((v, i, a) => a.findIndex(v2 => (v2.value === v.value)) === i).sort();
+    var assFlags_end = Date.now();
+    console.log('Retrieved assFlags, operation took ' + getElapsedTime(assFlag_start, assFlags_end) + ' to complete');
+    
+    obj.globals.ValidFlags["Ass"] = assFlags;
+
+    console.log('\nRetrieving keyitems');
+    var keyitem_start = Date.now();
+    var keyitems = [];
+    for (var index = 0; index < contents.length; ++index) {
+        var content = contents[index];
+        const regex = /\.(create|has)KeyItem\("([\S ][^)]+)\)*/g
+
+        var m;
+        while ((m = regex.exec(content)) !== null) {
+            if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+
+            m.forEach((match, groupIndex) => {
+                var keyitem = new KeyitemClass();
+
+                if (match.startsWith('.create')) {
+                    keyitem.storageName = match.slice(nthIndex(match, '"', 1) + 1, nthIndex(match, '"', 2));
+                    keyitem.value1 = getKeyitemVal(match, 1);
+                    keyitem.value2 = getKeyitemVal(match, 2);
+                    keyitem.value3 = getKeyitemVal(match, 3);
+                    keyitem.value4 = getKeyitemVal(match, 4);
+
+                    if (nthIndex(match, '"', 3) > 0) {
+                        keyitem.tooltip = match.slice(nthIndex(match, '"', 3) + 1, nthIndex(match, ')', 1) - 1);
+                    }
+
+                    keyitems.push(keyitem);
+                }
+            });
+        }
+    }
+
+    var panties = [];
+    for (var index = 0; index < contents.length; ++index) {
+        var content = contents[index];
+        const regex = /\.(create|has)KeyItem\((PantyData.get\([\S ][^)]+[\S ][^)]+)\)/g
+
+        var m;
+        while ((m = regex.exec(content)) !== null) {
+            if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+
+            m.forEach((match, groupIndex) => {
+                var panty = new KeyitemClass();
+
+                if (match.startsWith('.create')) {
+                    panty.storageName = obj.pantyData[(match.slice(nthIndex(match, '"', 1) + 1, nthIndex(match, '"', 2)))];
+                    panty.value1 = getKeyitemVal(match, 1);
+                    panty.value2 = getKeyitemVal(match, 2);
+                    panty.value3 = getKeyitemVal(match, 3);
+                    panty.value4 = getKeyitemVal(match, 4);
+
+                    if (nthIndex(match, '"', 3) > 0) {
+                        panty.tooltip = match.slice(nthIndex(match, '"', 3) + 1, nthIndex(match, ')', 2) - 1);
+                    }
+
+                    panties.push(panty);
+                }
+            });
+        }
+    }
+    keyitems = keyitems.concat(panties);
+
+    keyitems = keyitems.filter((v, i, a) => a.findIndex(v2 => (v2.storageName === v.storageName)) === i).sort();
+    var keyitem_end = Date.now();
+    console.log('Retrieved keyitems, operation took ' + getElapsedTime(keyitem_start, keyitem_end) + ' to complete');
 
 
     console.log('\nRetrieving status effects');
@@ -315,7 +557,7 @@ const fs = require('fs');
     var statusEffects = [];
     for (var index = 0; index < contents.length; ++index) {
         var content = contents[index];
-        const regex = /\.(create|has)StatusEffect\(([\"\w\ \,\+\%\.\'\-\’\!\?\$\#\@\/\&\*]+)\)/g;
+        const regex = /\.(create|has)StatusEffect\(([\"\w\ \,\+\%\.\'\-\ï¿½\!\?\$\#\@\/\&\*]+)\)/g;
 
         var m;
         while ((m = regex.exec(content)) !== null) {
@@ -338,14 +580,14 @@ const fs = require('fs');
 
                     if (nthIndex(match, '"', 5) > 0) {
                         if (nthIndex(match, ',', 8) > 0) {
-                            statusEffect.toolTip = match.slice(nthIndex(match, '"', 5) + 1, nthIndex(match, '"', 6));
+                            statusEffect.tooltip = match.slice(nthIndex(match, '"', 5) + 1, nthIndex(match, '"', 6));
                         }
                         else {
                             if (nthIndex(match, ',', 9) > 0) {
-                                statusEffect.toolTip = match.slice(nthIndex(match, '"', 5) + 1, nthIndex(match, ',', 9) - 1);
+                                statusEffect.tooltip = match.slice(nthIndex(match, '"', 5) + 1, nthIndex(match, ',', 9) - 1);
                             }
                             else {
-                                statusEffect.toolTip = match.slice(nthIndex(match, '"', 5) + 1, nthIndex(match, ')', 1) - 1);
+                                statusEffect.tooltip = match.slice(nthIndex(match, '"', 5) + 1, nthIndex(match, ')', 1) - 1);
                             }
                         }
                     }
@@ -408,15 +650,60 @@ const fs = require('fs');
     var codexEntries_end = Date.now();
     console.log('Retrieved codex entries, operation took ' + getElapsedTime(codexEntries_start, codexEntries_end) + ' to complete');
 
+
+    // if somebody from FenCo reads this, please put all hair styles into an array in global
+
+    console.log('\nRetrieving hair entries');
+    var hair_start = Date.now();
+    var hairs = [];
+    for (var index = 0; index < contents.length; ++index) {
+        var content = contents[index];
+
+        // only check tavros (cause only ceria is a hairdresser)
+        if (!content.includes("sourceMappingURL=content_tavros")) {
+            continue;
+        }
+        const regex = /\.(push)\(\[([\S ][^)]+[\S ][^)])\]\)/g;
+
+        var m;
+        while ((m = regex.exec(content)) !== null) {
+            if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+
+            m.forEach((match, groupIndex) => {
+                var hair = new hairClass();
+                
+                if (groupIndex == 2 && (match.match(/\"/g) || []).length == 8 && !match.includes("+") && (match.match(/\,/g) || []).length >= 5) {
+                    hair.name = getHairVal(match, 0);
+                    hair.value = getHairVal(match, 1);
+                    hair.desc = getHairVal(match, 2);
+                    hair.extra = getHairVal(match, 3);
+
+                    hairs.push(hair);
+                }
+            });
+        }
+    }
+    hairs = hairs.filter((v, i, a) => a.findIndex(v2 => (v2 === v)) === i).sort();
+    var hair_end = Date.now();
+    console.log('Retrieved hair entries, operation took ' + getElapsedTime(hair_start, hair_end) + ' to complete');
+
+    // add hair to globals
+    obj.globals["HairStyle"] = hairs;
+
+    obj.globals = JSON.stringify(obj.globals);
+
     const format = str => prettier.format(str, { parser: 'babel', tabWidth: 4 });
 
     console.log('\nWriting to file(s)');
     var write_start = Date.now();
-    fs.writeFileSync('../data/global.js', format('const GlobalKeys = ' + obj.globals));
-    fs.writeFileSync('../data/flags.js', format('const Flags = ' + JSON.stringify(gameFlags)));
-    fs.writeFileSync('../data/perks.js', format('const Perks = ' + JSON.stringify(perks)));
-    fs.writeFileSync('../data/status.js', format('const StatusEffects = ' + JSON.stringify(statusEffects)));
-    fs.writeFileSync('../data/codex.js', format('const CodexEntries = ' + JSON.stringify(codexEntries)));
+    fs.writeFileSync('data/global.js', format('const GlobalKeys = ' + obj.globals));
+    fs.writeFileSync('data/flags.js', format('const Flags = ' + JSON.stringify(gameFlags)));
+    fs.writeFileSync('data/perks.js', format('const Perks = ' + JSON.stringify(perks)));
+    fs.writeFileSync('data/status.js', format('const StatusEffects = ' + JSON.stringify(statusEffects)));
+    fs.writeFileSync('data/codex.js', format('const CodexEntries = ' + JSON.stringify(codexEntries)));
+    fs.writeFileSync('data/keyitems.js', format('const KeyItems = ' + JSON.stringify(keyitems)));
     var write_end = Date.now();
     console.log('File(s) written, operation took ' + getElapsedTime(write_start, write_end) + ' to complete');
 

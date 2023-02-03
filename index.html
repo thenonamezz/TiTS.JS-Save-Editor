@@ -21,6 +21,8 @@
     <script type="text/javascript" src="data/global.js"></script>
     <script type="text/javascript" src="data/perks.js"></script>
     <script type="text/javascript" src="data/status.js"></script>
+    <script type="text/javascript" src="data/keyitems.js"></script>
+    <script type="text/javascript" src="data/implants.js"></script>
     <script type="text/javascript" src="data/vm.js"></script>
     <script type="text/javascript" src="ui/display.js"></script>
     <script type="text/javascript" src="ui/layout.js"></script>
@@ -52,15 +54,6 @@
 
         function doLoad() {
             $('#loadFile').attr('accept', fileExtension);
-
-            //$('#editField-character').on('change', function () {
-            //    const key = $(this).val();
-            //    save.character = {
-            //        obj: save.saveObj.characters[key],
-            //        key: key
-            //    };
-            //    //$('.nav-tabs button:first').tab('show'); //this might be annoying
-            //});
 
             // #region File handling
             $('body').on('dragenter dragleave dragover', (e) => {
@@ -106,14 +99,6 @@
                                 return;
                             }
 
-                            // this might be annoying
-                            //$('.nav-tabs button:first').tab('show');
-                            //window.scrollTo({
-                            //    top: 0,
-                            //    left: 0,
-                            //    behavior: 'smooth'
-                            //})
-
                             window.vm || (window.vm = new ViewModel(json));
 
                             try {
@@ -156,7 +141,6 @@
             });
 
             $('#inputSaveName').on('change', function () {
-                // alert('File name must be ' + requiredLength + ' character' + (requiredLength > 1 ? 's' : '') + ' or longer');                //
 
                 const name = $(this).val();
                 if (name.length <= minFileNameLength) {
@@ -182,20 +166,11 @@
             $('#tabBody').append(displayBody());
             $('#tabCrotch').append(displayCrotch());
             $('#tabPerks').append(displayPerks());
-
-            const pDisc = document.createElement('p');
-            pDisc.textContent = 'slow af atm'
-            pDisc.className = 'pb-3';
-            // #region Status Effects
-            $('#tabStatusEffects').append(
-                pDisc,
-                displayStatusEffects()
-            );
-            // #endregion
-
+            $('#tabStatusEffects').append(displayStatusEffects());
+            
             // #region Flags
             const fDisc = document.createElement('p');
-            fDisc.textContent = 'doesnt work correctly if you load a save on top of another one, at least not yet'
+            fDisc.textContent = 'Doesnt work correctly if you load a save on top of another one, not gonna bother doing this'
             fDisc.className = 'pb-3';
 
             $('#tabFlags').append(
@@ -204,15 +179,13 @@
             );
             // #endregion
 
-            // #region Inventory
-            $('#tabInventory').append(
-                document.createElement('p').textContent = 'Low priority, this can be achieved through the game cheat menu.'
-            );
+            // #region Key Items
+            $('#tabKeyItems').append(displayKeyitems());
             // #endregion
 
-            // #region Key Items
-            $('#tabKeyItems').append(
-                document.createElement('p').textContent = 'Low priority, this can be achieved through the game cheat menu.'
+            // #region Inventory
+            $('#tabInventory').append(
+                document.createElement('p').textContent = 'Not gonna bother with this, do it in game with the cheat menu.'
             );
             // #endregion
 
@@ -324,8 +297,8 @@
                 <div class="tab-pane fade" id="tabPerks" role="tabpanel" aria-labelledby="navPerks"></div>
                 <div class="tab-pane fade" id="tabStatusEffects" role="tabpanel" aria-labelledby="navStatusEffects"></div>
                 <div class="tab-pane fade" id="tabFlags" role="tabpanel" aria-labelledby="navFlags"></div>
-                <div class="tab-pane fade" id="tabInventory" role="tabpanel" aria-labelledby="navInventory"></div>
                 <div class="tab-pane fade" id="tabKeyItems" role="tabpanel" aria-labelledby="navKeyItems"></div>
+                <div class="tab-pane fade" id="tabInventory" role="tabpanel" aria-labelledby="navInventory"></div>
             </div>
         </div>
     </div>
